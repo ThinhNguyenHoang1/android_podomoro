@@ -1,6 +1,5 @@
 package com.example.poromodo.ui.home
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
