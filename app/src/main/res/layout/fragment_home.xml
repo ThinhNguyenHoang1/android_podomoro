@@ -2,9 +2,108 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/fmHome"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="16dp"
     tools:context=".ui.home.HomeFragment">
+    <!-- Segmented Buttons for Phases -->
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/phase_toggle_group"
+        android:layout_width="370dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent="0.9"
+        app:selectionRequired="true"
+        app:singleSelection="true">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/phase_pomodoro"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Pomodoro Focus"
+            android:textSize="14sp"
+            app:cornerRadius="8dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/phase_short_break"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Short Break"
+            android:textSize="14sp"
+            app:cornerRadius="8dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/phase_long_break"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Long Break"
+            android:textSize="14sp"
+            app:cornerRadius="8dp" />
+
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+
+    <FrameLayout
+        android:id="@+id/fl_progress_container"
+        android:layout_width="250dp"
+        android:layout_height="250dp"
+        android:layout_marginTop="12dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/phase_toggle_group">
+
+        <ImageView
+            android:id="@+id/status_image"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_gravity="center"
+            android:contentDescription="Chungus image"
+            android:src="@drawable/red_apple"
+            app:layout_constraintHorizontal_bias="1.0" />
+
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/status_progress_bar"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_gravity="center"
+            android:indeterminate="false"
+            android:progress="100"
+            app:indicatorColor="@android:color/holo_red_light"
+            app:indicatorSize="200dp"
+            app:trackThickness="8dp" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/tv_time_left"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:fontFamily="monospace"
+        android:gravity="center"
+        android:letterSpacing="0.05"
+        android:shadowColor="@color/black"
+        android:shadowDx="2"
+        android:shadowDy="2"
+        android:shadowRadius="2"
+        android:textSize="60sp"
+        android:textStyle="bold"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/fl_progress_container"
+        tools:text="25:00" />
 
     <Button
         android:id="@+id/podomoro_button"
@@ -13,57 +112,8 @@
         android:text="CLICK!!"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/status_progress_bar" />
-
-    <ImageView
-        android:id="@+id/status_image"
-        android:layout_width="201dp"
-        android:layout_height="218dp"
-        android:layout_marginTop="48dp"
-        android:contentDescription="Chungus image"
-        android:src="@drawable/red_apple"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ProgressBar
-        android:id="@+id/status_progress_bar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="188dp"
-        android:layout_height="27dp"
-        android:layout_marginTop="12dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/status_image" />
-
-    <LinearLayout
-        android:id="@+id/linearLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:layoutDirection="ltr"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@+id/podomoro_button"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/status_progress_bar">
-
-        <TextView
-            android:id="@+id/tv_time_total"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
-            android:text="asd"
-            tools:text="asd" />
-
-        <TextView
-            android:id="@+id/tv_time_left"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
-            android:text="asdasd"
-            tools:text="asd" />
-    </LinearLayout>
+        app:layout_constraintTop_toBottomOf="@+id/tv_time_left" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
