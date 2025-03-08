@@ -122,6 +122,7 @@ class HomeFragment : Fragment() {
         }
 
         button.setOnClickListener {
+            Log.d("CHUNGUS", "onCreateView: ${vm.isRunning.value}")
             if (!vm.isRunning.value) {
                 vm.startTimer()
             } else {

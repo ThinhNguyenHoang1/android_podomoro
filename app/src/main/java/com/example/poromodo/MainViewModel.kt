@@ -10,6 +10,7 @@ import com.example.poromodo.preferences.BREAK_DEFAULT_DURATION_MIN
 import com.example.poromodo.preferences.DataStoreManager
 import com.example.poromodo.preferences.LONG_BREAK_DEFAULT_DURATION_MIN
 import com.example.poromodo.preferences.PODOMORO_DEFAULT_DURATION_MIN
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -39,6 +40,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _isRunning = MutableStateFlow(false)
     val isRunning: StateFlow<Boolean> = _isRunning
 
+
+    // Job to manage the timer coroutine
+    private var timerJob: Job? = null
+
     init {
         // Load initial values from DataStore
         val context = application.applicationContext
@@ -57,7 +62,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun setPhase(phase: PoromodoPhase) {
         if (_phase.value != phase) {
             _phase.value = phase
-            _isRunning.value = false // Stop the timer when switching phases
+            _isRunning.value = false
+            cancelTickingJob()
             when (phase) {
                 PoromodoPhase.PODOMORO -> _timeRemaining.value = _pomodoroDuration.value
                 PoromodoPhase.BREAK -> _timeRemaining.value = _breakTime.value
@@ -69,7 +75,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun startTimer() {
         if (!_isRunning.value) {
             _isRunning.value = true
-            viewModelScope.launch {
+            cancelTickingJob()
+            timerJob = viewModelScope.launch {
                 while (_timeRemaining.value > 0 && _isRunning.value) {
                     kotlinx.coroutines.delay(1000)
                     _timeRemaining.value -= 1
@@ -85,6 +92,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun pauseTimer() {
+        cancelTickingJob()
         _isRunning.value = false
     }
 
@@ -93,8 +101,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _timeRemaining.value = _pomodoroDuration.value
     }
 
+    private fun cancelTickingJob() {
+        timerJob?.cancel()
+        timerJob = null // Reset the job reference
+    }
+
     override fun onCleared() {
         super.onCleared()
+        cancelTickingJob()
         // Cleanup if needed
     }
 
