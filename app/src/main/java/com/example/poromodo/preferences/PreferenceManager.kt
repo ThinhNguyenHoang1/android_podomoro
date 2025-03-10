@@ -37,6 +37,7 @@ object DataStoreManager {
                 podomoroDuration = preferences[POMODORO_DURATION_KEY]
                     ?: PODOMORO_DEFAULT_DURATION_MIN,
                 breakTime = preferences[BREAK_TIME_KEY] ?: BREAK_DEFAULT_DURATION_MIN,
+                longBreakTime = preferences[BREAK_LONG_TIME_KEY] ?: LONG_BREAK_DEFAULT_DURATION_MIN,
                 notiSoundTrack = preferences[NOTIFICATION_SOUND_KEY] ?: ""
             )
         }

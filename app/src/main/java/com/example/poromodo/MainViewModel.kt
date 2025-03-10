@@ -34,7 +34,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _notificationSoundUri = MutableStateFlow(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
     val notificationSoundUri: StateFlow<Uri> = _notificationSoundUri
 
-    private val _timeRemaining = MutableStateFlow(PODOMORO_DEFAULT_DURATION_MIN) // Default to Pomodoro duration in seconds
+    private val _timeRemaining = MutableStateFlow(PODOMORO_DEFAULT_DURATION_MIN * 60) // Default to Pomodoro duration in seconds
     val timeRemaining: StateFlow<Int> = _timeRemaining
 
     private val _isRunning = MutableStateFlow(false)
@@ -48,8 +48,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         // Load initial values from DataStore
         val context = application.applicationContext
         viewModelScope.launch {
-            Log.d("CHUNGUS", "HIHIHI: ${isRunning.value} ${timeRemaining.value}")
             DataStoreManager.getSettings(context).collectLatest { settings ->
+                Log.d("CHUNGUS", "SETTINGS=====$settings")
                 _pomodoroDuration.value = settings.podomoroDuration * 60
                 _breakTime.value = settings.breakTime * 60
                 _longBreakTime.value = settings.longBreakTime * 60
@@ -82,11 +82,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     _timeRemaining.value -= 1
                 }
                 _isRunning.value = false
-                when (_phase.value) {
-                    PoromodoPhase.PODOMORO -> _timeRemaining.value = _pomodoroDuration.value
-                    PoromodoPhase.BREAK -> _timeRemaining.value = _breakTime.value
-                    PoromodoPhase.LONG_BREAK -> _timeRemaining.value = _longBreakTime.value
-                }
+                // TODO: Auto switch phase
             }
         }
     }

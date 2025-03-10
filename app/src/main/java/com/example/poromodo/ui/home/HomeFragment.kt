@@ -12,6 +12,9 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.example.poromodo.MainViewModel
 import com.example.poromodo.PoromodoPhase
 import com.example.poromodo.R
@@ -59,27 +62,29 @@ class HomeFragment : Fragment() {
         }
 
 
-        CoroutineScope(Dispatchers.Main).launch {
-            launch {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 vm.timeRemaining.collectLatest {
                     progressBar.progress = it
                     timeLeftTv.text = formatTime(it)
                     Log.d("DELUXE", "onCreateView: TIMEREMANINGIS: $it")
                 }
-            }
-
-            launch {
                 vm.isRunning.collectLatest {
                     button.text = if (it) "PAUSE" else "START"
                 }
-            }
-
-            launch {
                 vm.phase.collectLatest {
                     when (it) {
-                        PoromodoPhase.PODOMORO -> phaseToggleGroup.check(R.id.phase_pomodoro)
-                        PoromodoPhase.BREAK -> phaseToggleGroup.check(R.id.phase_short_break)
-                        PoromodoPhase.LONG_BREAK -> phaseToggleGroup.check(R.id.phase_long_break)
+                        PoromodoPhase.PODOMORO -> {
+                            phaseToggleGroup.check(R.id.phase_pomodoro)
+                        }
+
+                        PoromodoPhase.BREAK -> {
+                            phaseToggleGroup.check(R.id.phase_short_break)
+                        }
+
+                        PoromodoPhase.LONG_BREAK -> {
+                            phaseToggleGroup.check(R.id.phase_long_break)
+                        }
                     }
                     val color = when (it) {
                         PoromodoPhase.PODOMORO -> Color.RED
@@ -88,40 +93,17 @@ class HomeFragment : Fragment() {
                     }
                     binding.fmHome.setBackgroundColor(color)
                 }
-            }
 
-            launch {
-                vm.pomodoroDuration.collectLatest {
-                    progressBar.max = it
-                    if (!vm.isRunning.value) {
+                vm.timeRemaining.collectLatest {
                         progressBar.progress = it
                         timeLeftTv.text = formatTime(it)
-                    }
                 }
-            }
-            launch {
-                vm.breakTime.collectLatest {
-                    progressBar.max = it
-                    if (!vm.isRunning.value) {
-                        progressBar.progress = it
-                        timeLeftTv.text = formatTime(it)
-                    }
-                }
-            }
 
-            launch {
-                vm.longBreakTime.collectLatest {
-                    progressBar.max = it
-                    if (!vm.isRunning.value) {
-                        progressBar.progress = it
-                        timeLeftTv.text = formatTime(it)
-                    }
-                }
             }
         }
 
+
         button.setOnClickListener {
-            Log.d("CHUNGUS", "onCreateView: ${vm.isRunning.value}")
             if (!vm.isRunning.value) {
                 vm.startTimer()
             } else {

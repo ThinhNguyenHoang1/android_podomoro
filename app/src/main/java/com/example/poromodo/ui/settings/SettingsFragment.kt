@@ -23,6 +23,10 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.core.net.toUri
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 
 class SettingsFragment : Fragment() {
     private var _binding: FragmentSettingsBinding? = null
@@ -71,35 +75,37 @@ class SettingsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Load preferences
-        CoroutineScope(Dispatchers.Main).launch {
-            launch {
-                DataStoreManager.getPomodoroDuration(requireContext()).collectLatest {
-                    binding.pomodoroDurationInput.setText(it.toString())
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(state = Lifecycle.State.STARTED) {
+                launch {
+                    DataStoreManager.getPomodoroDuration(requireContext()).collectLatest {
+                        binding.pomodoroDurationInput.setText(it.toString())
+                    }
                 }
-            }
 
-            launch {
-                DataStoreManager.getBreakTime(requireContext()).collectLatest {
-                    binding.breakTimeInput.setText(it.toString())
+                launch {
+                    DataStoreManager.getBreakTime(requireContext()).collectLatest {
+                        binding.breakTimeInput.setText(it.toString())
+                    }
                 }
-            }
 
-            launch {
-                DataStoreManager.getLongBreakTime(requireContext()).collectLatest {
-                    binding.breakLongTimeInput.setText(it.toString())
+                launch {
+                    DataStoreManager.getLongBreakTime(requireContext()).collectLatest {
+                        binding.breakLongTimeInput.setText(it.toString())
+                    }
                 }
-            }
 
-            launch {
-                DataStoreManager.getNotificationSound(requireContext()).collectLatest {
-                    val uri = Uri.parse(it)
-                    val title = getSoundTrackTitleFromUri(uri)
-                    Log.d("KAPPA", "onViewCreated: TITLE: $title")
-                    binding.notificationSoundInput.text = title
+                launch {
+                    DataStoreManager.getNotificationSound(requireContext()).collectLatest {
+                        val uri = it.toUri()
+                        selectedRingtoneUri = uri
+                        val title = getSoundTrackTitleFromUri(uri)
+                        Log.d("KAPPA", "onViewCreated: TITLE: $title")
+                        binding.notificationSoundInput.text = title
+                    }
                 }
             }
         }
-
         // Listener
         val soundSpinner = binding.notificationSoundInput
         val defaultRingtoneUri =
