@@ -55,8 +55,8 @@
 
     <FrameLayout
         android:id="@+id/fl_progress_container"
-        android:layout_width="250dp"
-        android:layout_height="250dp"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
         android:layout_marginTop="12dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
@@ -110,10 +110,51 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="CLICK!!"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_time_left"
+        app:layout_constraintBottom_toTopOf="@id/task_guide_line"
+        />
+
+    <TextView
+        android:id="@+id/tv_task_list"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Task Lisk"
+        android:textSize="20dp"
+        app:layout_constraintBottom_toTopOf="@+id/recyclerView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/task_guide_line" />
+
+    <Button
+        android:id="@+id/btn_task_add"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="+ TASK"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@id/tv_task_list"
+        app:layout_constraintTop_toBottomOf="@id/task_guide_line" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="250dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tv_time_left" />
+        app:layout_constraintTop_toBottomOf="@+id/btn_task_add"
+        tools:itemCount="3"
+        tools:listitem="@layout/item_user_task" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/task_guide_line"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_begin="377dp" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

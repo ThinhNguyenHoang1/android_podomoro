@@ -16,7 +16,6 @@ import com.example.poromodo.MainViewModel
 import com.example.poromodo.PoromodoPhase
 import com.example.poromodo.R
 import com.example.poromodo.databinding.FragmentHomeBinding
-import com.example.poromodo.model.Status
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -65,7 +64,7 @@ class HomeFragment : Fragment() {
                 vm.timeRemaining.collectLatest {
                     progressBar.progress = it
                     timeLeftTv.text = formatTime(it)
-                    Log.d("DELUXE", "onCreateView: TIMEREMANINGIS: ${it.toString()}")
+                    Log.d("DELUXE", "onCreateView: TIMEREMANINGIS: $it")
                 }
             }
 
