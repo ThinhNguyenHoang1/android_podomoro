@@ -1,4 +1,6 @@
 package com.example.poromodo.model
+
+import android.content.Context
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
@@ -6,30 +8,32 @@ import java.time.format.DateTimeFormatter
 
 class ZonedDateTimeConverter {
     private val formatter = DateTimeFormatter.ISO_DATE_TIME
+
     @TypeConverter
     fun toString(entity: ZonedDateTime): String {
         return formatter.format(entity)
     }
+
     @TypeConverter
     fun fromString(serialized: String): ZonedDateTime {
         return formatter.parse(serialized) as ZonedDateTime
     }
 }
 
-data class Usage (
-    val totalPodomoroTime: Long,
-    val totalPodomoroReps: Long,
-    val totalTasksCompleted: Long
+data class Usage(
+    val totalPodomoroTime: Int,
+    val totalPodomoroReps: Int,
+    val totalTasksCompleted: Int
 )
 
 @Entity
-data class Task (
-    @PrimaryKey val taskId: Long,
+data class Task(
+    @PrimaryKey(autoGenerate = true) val taskId: Long = 0,
     val title: String,
     val description: String,
-    val numOfPodomoroToComplete: Long,
-    val numOfPodomoroSpend: Long,
-    val totalTimeSpent: Long,
+    val numOfPodomoroToComplete: Int = 0,
+    val numOfPodomoroSpend: Int = 0,
+    val totalTimeSpent: Int,
     val createdAt: ZonedDateTime,
 )
 
@@ -41,10 +45,10 @@ data class TaskSessionCrossRef(
 
 // Session: (Start) From opening app => Start at least one podomoro => Leave App (End)
 @Entity
-data class Session (
-    @PrimaryKey val sessionId: Long,
-    val timeFocus: Long,
-    val timeBreak: Long,
+data class Session(
+    @PrimaryKey(autoGenerate = true) val sessionId: Long,
+    val timeFocus: Int,
+    val timeBreak: Int,
     val startAt: ZonedDateTime,
     val endAt: ZonedDateTime
 )
@@ -95,7 +99,20 @@ interface SessionDao {
 @TypeConverters(
     value = [ZonedDateTimeConverter::class]
 )
-abstract class AppDatabase: RoomDatabase() {
+abstract class AppDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao
     abstract fun sessionDao(): SessionDao
+    companion object {
+        @Volatile
+        private var Instance: AppDatabase? = null
+
+        fun getDatabase(context: Context): AppDatabase {
+            // if the Instance is not null, return it, otherwise create a new database instance.
+            return Instance ?: synchronized(this) {
+                Room.databaseBuilder(context, AppDatabase::class.java, "app_database")
+                    .build()
+                    .also { Instance = it }
+            }
+        }
+    }
 }
