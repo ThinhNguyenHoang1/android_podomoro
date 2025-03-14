@@ -14,9 +14,7 @@ import com.example.poromodo.ui.stats.StatFragment
     of the current configured value)
 
     Fix the Dialog not showing up
-    Add the RecyclerView for task management
 
-    Room persistence stuffs
  */
 class MainActivity : AppCompatActivity() {
 

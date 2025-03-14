@@ -26,7 +26,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class HomeFragment : Fragment(), AddTaskDialogFragment.OnTaskAddedListener {
+class HomeFragment : Fragment(), AddTaskDialogFragment.OnTaskAddedListener, UpdateTaskDialogFragment.OnTaskUpdatedListener {
 
     private val vm: MainViewModel by activityViewModels()
     private var _binding: FragmentHomeBinding? = null
@@ -71,17 +71,36 @@ class HomeFragment : Fragment(), AddTaskDialogFragment.OnTaskAddedListener {
             }
         }
 
-        taskAdapter = TaskRecyclerViewAdapter { task ->
-            Log.d("Chungus", "TASK CLICKED $task")
-//            val updatedTask = task.copy(numOfPomodorosCompleted = task.numOfPomodorosCompleted + 1)
-//            val index = taskList.indexOfFirst { it.taskId == task.taskId }
-//            if (index != -1) {
-//                taskList[index] = updatedTask
-//                taskAdapter.submitList(taskList.toList())
-//                lifecycleScope.launch {
-//                    taskDao.insertTask(updatedTask)
-//                }
-//            }
+        taskAdapter = TaskRecyclerViewAdapter { task, action ->
+            Log.d("Menu Action", "onTaskHandle: $task $action")
+            when (action) {
+                TaskRecyclerViewAdapter.MenuAction.EDIT -> {
+                    val dialog = UpdateTaskDialogFragment(task)
+                    dialog.setOnTaskUpdatedListener(this)
+                    dialog.show(childFragmentManager, "EditTaskDialog")
+                }
+                TaskRecyclerViewAdapter.MenuAction.DELETE -> {
+                    val index = taskList.indexOfFirst { it.taskId == task.taskId }
+                    if (index != -1) {
+                        taskList.removeAt(index)
+                        taskAdapter.submitList(taskList.toList())
+                        lifecycleScope.launch {
+                            taskDao.deleteTask(task.taskId)
+                        }
+                    }
+                }
+                TaskRecyclerViewAdapter.MenuAction.MARK_COMPLETE -> {
+                    val updatedTask = task.copy(numOfPomodorosCompleted = task.numOfPomodorosToComplete)
+                    val index = taskList.indexOfFirst { it.taskId == task.taskId }
+                    if (index != -1) {
+                        taskList[index] = updatedTask
+                        taskAdapter.submitList(taskList.toList())
+                        lifecycleScope.launch {
+                            taskDao.insertTask(updatedTask)
+                        }
+                    }
+                }
+            }
         }
         binding.rclvTaskList.layoutManager = LinearLayoutManager(requireContext())
         binding.rclvTaskList.adapter = taskAdapter
@@ -160,6 +179,12 @@ class HomeFragment : Fragment(), AddTaskDialogFragment.OnTaskAddedListener {
 
     override fun onTaskAdded(task: Task) {
         Log.d("CHUNGUS", "onTaskAdded: $task")
+        CoroutineScope(Dispatchers.IO).launch {
+            val taskId = AppDatabase.getDatabase(requireContext()).taskDao().upsertTask(task)
+        }
+    }
+
+    override fun onTaskUpdated(task: Task) {
         CoroutineScope(Dispatchers.IO).launch {
             val taskId = AppDatabase.getDatabase(requireContext()).taskDao().upsertTask(task)
         }
