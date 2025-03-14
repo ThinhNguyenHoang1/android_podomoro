@@ -12,9 +12,6 @@ import com.example.poromodo.ui.stats.StatFragment
 /* TODO:
     Fix the first time loading the code. (Cause: current timeLeft is default from 25 MINUTE instead
     of the current configured value)
-
-    Fix the Dialog not showing up
-
  */
 class MainActivity : AppCompatActivity() {
 

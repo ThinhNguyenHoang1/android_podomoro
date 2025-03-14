@@ -22,6 +22,7 @@ import com.example.poromodo.model.AppDatabase
 import com.example.poromodo.model.Task
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -32,8 +33,6 @@ class HomeFragment : Fragment(), AddTaskDialogFragment.OnTaskAddedListener, Upda
     private var _binding: FragmentHomeBinding? = null
     private lateinit var taskAdapter: TaskRecyclerViewAdapter
 
-    // This property is only valid between onCreateView and
-    // onDestroyView.
     private val binding get() = _binding!!
     fun formatTime(seconds: Int): String {
         val minutes = seconds / 60 // Integer division to get minutes
@@ -71,7 +70,7 @@ class HomeFragment : Fragment(), AddTaskDialogFragment.OnTaskAddedListener, Upda
             }
         }
 
-        taskAdapter = TaskRecyclerViewAdapter { task, action ->
+        taskAdapter = TaskRecyclerViewAdapter(vm) { task, action ->
             Log.d("Menu Action", "onTaskHandle: $task $action")
             when (action) {
                 TaskRecyclerViewAdapter.MenuAction.EDIT -> {
@@ -166,13 +165,13 @@ class HomeFragment : Fragment(), AddTaskDialogFragment.OnTaskAddedListener, Upda
     override fun onTaskAdded(task: Task) {
         Log.d("CHUNGUS", "onTaskAdded: $task")
         CoroutineScope(Dispatchers.IO).launch {
-            val taskId = vm.upsertTask(task)
+            vm.upsertTask(task)
         }
     }
 
     override fun onTaskUpdated(task: Task) {
         CoroutineScope(Dispatchers.IO).launch {
-            val taskId = vm.updateTask(task)
+            vm.updateTask(task)
         }
     }
 }

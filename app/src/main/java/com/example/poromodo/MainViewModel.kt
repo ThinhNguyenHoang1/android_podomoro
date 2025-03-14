@@ -4,12 +4,10 @@ import android.app.Application
 import android.media.RingtoneManager
 import android.net.Uri
 import android.util.Log
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.poromodo.model.AppDatabase
 import com.example.poromodo.model.Task
-import com.example.poromodo.model.TaskDao
 import com.example.poromodo.preferences.BREAK_DEFAULT_DURATION_MIN
 import com.example.poromodo.preferences.DataStoreManager
 import com.example.poromodo.preferences.LONG_BREAK_DEFAULT_DURATION_MIN
@@ -20,8 +18,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlin.math.log
 
 enum class PoromodoPhase { PODOMORO, BREAK, LONG_BREAK }
 
@@ -29,6 +25,10 @@ class MainViewModel(application: Application) :
     AndroidViewModel(application) {
     private val _phase = MutableStateFlow(PoromodoPhase.PODOMORO)
     val phase: StateFlow<PoromodoPhase> = _phase
+
+    private val _expandedStates = MutableStateFlow<Map<Long, Boolean>>(emptyMap())
+    val expandedStates: StateFlow<Map<Long, Boolean>> = _expandedStates
+
 
     private val _pomodoroDuration =
         MutableStateFlow(PODOMORO_DEFAULT_DURATION_MIN * 60) // Default in seconds
@@ -45,8 +45,7 @@ class MainViewModel(application: Application) :
         MutableStateFlow(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
     val notificationSoundUri: StateFlow<Uri> = _notificationSoundUri
 
-    private val _timeRemaining =
-        MutableStateFlow(PODOMORO_DEFAULT_DURATION_MIN * 60) // Default to Pomodoro duration in seconds
+    private val _timeRemaining = _pomodoroDuration
     val timeRemaining: StateFlow<Int> = _timeRemaining
 
     private val _isRunning = MutableStateFlow(false)
@@ -57,24 +56,7 @@ class MainViewModel(application: Application) :
     private var timerJob: Job? = null
 
     private val taskDao by lazy { AppDatabase.getDatabase(application).taskDao() }
-    fun tasks(): Flow<List<Task>> = taskDao.getTasksOrderByCreatedDate()
-    fun delTask(t: Task) {
-        viewModelScope.launch {
-            taskDao.deleteTask(t)
-        }
-    }
-    fun upsertTask(t: Task) {
-        viewModelScope.launch {
-             taskDao.upsertTask(t)
-        }
-    }
 
-    fun updateTask(t: Task) {
-        viewModelScope.launch {
-            Log.d("DELUXE", "NEW TASK: $t")
-            taskDao.updateTask(t)
-        }
-    }
     init {
         // Load initial values from DataStore
         val context = application.applicationContext
@@ -86,8 +68,44 @@ class MainViewModel(application: Application) :
                 _longBreakTime.value = settings.longBreakTime * 60
                 _notificationSoundUri.value = Uri.parse(settings.notiSoundTrack)
                 setPhase(PoromodoPhase.PODOMORO)
+                when (_phase.value) {
+                    PoromodoPhase.PODOMORO -> _timeRemaining.value = _pomodoroDuration.value
+                    PoromodoPhase.BREAK -> _timeRemaining.value = _breakTime.value
+                    PoromodoPhase.LONG_BREAK -> _timeRemaining.value = _longBreakTime.value
+                }
             }
         }
+    }
+
+    fun tasks(): Flow<List<Task>> = taskDao.getTasksOrderByCreatedDate()
+    fun delTask(t: Task) {
+        viewModelScope.launch {
+            taskDao.deleteTask(t)
+        }
+    }
+
+    fun upsertTask(t: Task) {
+        viewModelScope.launch {
+            taskDao.upsertTask(t)
+        }
+    }
+
+    fun updateTask(t: Task) {
+        viewModelScope.launch {
+            Log.d("DELUXE", "NEW TASK: $t")
+            taskDao.updateTask(t)
+        }
+    }
+
+    fun setExpandedState(taskId: Long, isExpanded: Boolean) {
+        val currentStates = _expandedStates.value.toMutableMap()
+        currentStates[taskId] = isExpanded
+        _expandedStates.value = currentStates
+    }
+
+    fun resetExpandedStates(taskIds: List<Long>) {
+        val newStates = taskIds.associateWith { false }
+        _expandedStates.value = newStates
     }
 
     fun setPhase(phase: PoromodoPhase) {
@@ -95,7 +113,7 @@ class MainViewModel(application: Application) :
             _phase.value = phase
             _isRunning.value = false
             cancelTickingJob()
-            when (phase) {
+            when (_phase.value) {
                 PoromodoPhase.PODOMORO -> _timeRemaining.value = _pomodoroDuration.value
                 PoromodoPhase.BREAK -> _timeRemaining.value = _breakTime.value
                 PoromodoPhase.LONG_BREAK -> _timeRemaining.value = _longBreakTime.value
