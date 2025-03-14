@@ -71,10 +71,14 @@ data class TaskWithSessions(
 @Dao
 interface TaskDao {
     @Upsert
-    suspend fun upsertTask(contact: Task)
+    suspend fun upsertTask(t: Task)
+
+    @Update
+    suspend fun updateTask(t: Task)
+
 
     @Delete
-    suspend fun deleteTask(contact: Task)
+    suspend fun deleteTask(t: Task)
 
     @Query("SELECT * FROM task ORDER BY createdAt DESC")
     fun getTasksOrderByCreatedDate(): Flow<List<Task>>

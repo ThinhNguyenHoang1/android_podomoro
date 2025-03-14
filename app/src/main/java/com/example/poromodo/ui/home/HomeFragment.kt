@@ -80,25 +80,11 @@ class HomeFragment : Fragment(), AddTaskDialogFragment.OnTaskAddedListener, Upda
                     dialog.show(childFragmentManager, "EditTaskDialog")
                 }
                 TaskRecyclerViewAdapter.MenuAction.DELETE -> {
-                    val index = taskList.indexOfFirst { it.taskId == task.taskId }
-                    if (index != -1) {
-                        taskList.removeAt(index)
-                        taskAdapter.submitList(taskList.toList())
-                        lifecycleScope.launch {
-                            taskDao.deleteTask(task.taskId)
-                        }
-                    }
+                    vm.delTask(task)
                 }
                 TaskRecyclerViewAdapter.MenuAction.MARK_COMPLETE -> {
-                    val updatedTask = task.copy(numOfPomodorosCompleted = task.numOfPomodorosToComplete)
-                    val index = taskList.indexOfFirst { it.taskId == task.taskId }
-                    if (index != -1) {
-                        taskList[index] = updatedTask
-                        taskAdapter.submitList(taskList.toList())
-                        lifecycleScope.launch {
-                            taskDao.insertTask(updatedTask)
-                        }
-                    }
+                    val newTask = task.copy(numOfPodomoroSpend = task.numOfPodomoroToComplete)
+                    vm.updateTask(newTask)
                 }
             }
         }
@@ -180,13 +166,13 @@ class HomeFragment : Fragment(), AddTaskDialogFragment.OnTaskAddedListener, Upda
     override fun onTaskAdded(task: Task) {
         Log.d("CHUNGUS", "onTaskAdded: $task")
         CoroutineScope(Dispatchers.IO).launch {
-            val taskId = AppDatabase.getDatabase(requireContext()).taskDao().upsertTask(task)
+            val taskId = vm.upsertTask(task)
         }
     }
 
     override fun onTaskUpdated(task: Task) {
         CoroutineScope(Dispatchers.IO).launch {
-            val taskId = AppDatabase.getDatabase(requireContext()).taskDao().upsertTask(task)
+            val taskId = vm.updateTask(task)
         }
     }
 }

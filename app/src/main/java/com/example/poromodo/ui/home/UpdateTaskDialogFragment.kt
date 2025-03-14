@@ -58,7 +58,7 @@ class UpdateTaskDialogFragment(task: Task) : DialogFragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.tilTaTitle.editText?.setText(oldTask.title)
         binding.tilTaDescription.editText?.setText(oldTask.description)
-        binding.tilTaNumberOfPodoReps.editText?.setText(oldTask.numOfPodomoroToComplete)
+//        binding.tilTaNumberOfPodoReps.editText?.setText(oldTask.numOfPodomoroToComplete)
         binding.btnCancel.setOnClickListener {
             dismiss()
         }
@@ -85,7 +85,7 @@ class UpdateTaskDialogFragment(task: Task) : DialogFragment() {
                     binding.tilTaTitle.error = null
                     binding.tilTaNumberOfPodoReps.error = null
 
-                    val task = Task(
+                    val task = oldTask.copy(
                         title = title,
                         description = description,
                         numOfPodomoroToComplete = pomodoros,

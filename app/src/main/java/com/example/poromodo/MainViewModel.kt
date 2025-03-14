@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.log
 
 enum class PoromodoPhase { PODOMORO, BREAK, LONG_BREAK }
 
@@ -57,8 +58,23 @@ class MainViewModel(application: Application) :
 
     private val taskDao by lazy { AppDatabase.getDatabase(application).taskDao() }
     fun tasks(): Flow<List<Task>> = taskDao.getTasksOrderByCreatedDate()
+    fun delTask(t: Task) {
+        viewModelScope.launch {
+            taskDao.deleteTask(t)
+        }
+    }
+    fun upsertTask(t: Task) {
+        viewModelScope.launch {
+             taskDao.upsertTask(t)
+        }
+    }
 
-
+    fun updateTask(t: Task) {
+        viewModelScope.launch {
+            Log.d("DELUXE", "NEW TASK: $t")
+            taskDao.updateTask(t)
+        }
+    }
     init {
         // Load initial values from DataStore
         val context = application.applicationContext
