@@ -4,8 +4,10 @@ import android.app.Application
 import android.media.RingtoneManager
 import android.net.Uri
 import android.util.Log
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.poromodo.model.AppDatabase
 import com.example.poromodo.model.Task
 import com.example.poromodo.model.TaskDao
 import com.example.poromodo.preferences.BREAK_DEFAULT_DURATION_MIN
@@ -13,6 +15,7 @@ import com.example.poromodo.preferences.DataStoreManager
 import com.example.poromodo.preferences.LONG_BREAK_DEFAULT_DURATION_MIN
 import com.example.poromodo.preferences.PODOMORO_DEFAULT_DURATION_MIN
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -51,6 +54,10 @@ class MainViewModel(application: Application) :
 
     // Job to manage the timer coroutine
     private var timerJob: Job? = null
+
+    private val taskDao by lazy { AppDatabase.getDatabase(application).taskDao() }
+    fun tasks(): Flow<List<Task>> = taskDao.getTasksOrderByCreatedDate()
+
 
     init {
         // Load initial values from DataStore

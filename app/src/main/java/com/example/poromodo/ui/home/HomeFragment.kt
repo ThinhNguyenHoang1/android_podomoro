@@ -13,6 +13,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.poromodo.MainViewModel
 import com.example.poromodo.PoromodoPhase
 import com.example.poromodo.R
@@ -29,6 +30,7 @@ class HomeFragment : Fragment(), AddTaskDialogFragment.OnTaskAddedListener {
 
     private val vm: MainViewModel by activityViewModels()
     private var _binding: FragmentHomeBinding? = null
+    private lateinit var taskAdapter: TaskRecyclerViewAdapter
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -68,6 +70,22 @@ class HomeFragment : Fragment(), AddTaskDialogFragment.OnTaskAddedListener {
                 }
             }
         }
+
+        taskAdapter = TaskRecyclerViewAdapter { task ->
+            Log.d("Chungus", "TASK CLICKED $task")
+//            val updatedTask = task.copy(numOfPomodorosCompleted = task.numOfPomodorosCompleted + 1)
+//            val index = taskList.indexOfFirst { it.taskId == task.taskId }
+//            if (index != -1) {
+//                taskList[index] = updatedTask
+//                taskAdapter.submitList(taskList.toList())
+//                lifecycleScope.launch {
+//                    taskDao.insertTask(updatedTask)
+//                }
+//            }
+        }
+        binding.rclvTaskList.layoutManager = LinearLayoutManager(requireContext())
+        binding.rclvTaskList.adapter = taskAdapter
+
         // Add Task Button
         taskAddBtn.setOnClickListener {
             val dialog = AddTaskDialogFragment()
@@ -84,6 +102,7 @@ class HomeFragment : Fragment(), AddTaskDialogFragment.OnTaskAddedListener {
             }
         }
 
+        // Load tasks from Room database
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
@@ -93,6 +112,12 @@ class HomeFragment : Fragment(), AddTaskDialogFragment.OnTaskAddedListener {
                         Log.d("DELUXE", "onCreateView: TIMEREMANINGIS: $it")
                     }
                 }
+                launch {
+                    vm.tasks().collect {
+                        taskAdapter.submitList(it)
+                    }
+                }
+
                 launch {
                     vm.isRunning.collectLatest {
                         button.text = if (it) "PAUSE" else "START"

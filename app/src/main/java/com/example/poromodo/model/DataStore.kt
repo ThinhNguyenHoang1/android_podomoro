@@ -16,7 +16,11 @@ class ZonedDateTimeConverter {
 
     @TypeConverter
     fun fromString(serialized: String): ZonedDateTime {
-        return formatter.parse(serialized) as ZonedDateTime
+        return try {
+            ZonedDateTime.from(formatter.parse(serialized))
+        } catch (e: Exception) {
+            ZonedDateTime.now()
+        }
     }
 }
 
