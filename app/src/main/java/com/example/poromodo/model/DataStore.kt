@@ -2,9 +2,13 @@ package com.example.poromodo.model
 
 import android.content.Context
 import androidx.room.*
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+
+enum class PomodoroPhase { PODOMORO, BREAK, LONG_BREAK }
 
 class ZonedDateTimeConverter {
     private val formatter = DateTimeFormatter.ISO_DATE_TIME
@@ -30,6 +34,8 @@ data class Usage(
     val totalTasksCompleted: Int
 )
 
+// TODO: Update time spent on task.
+// TODO: Consider if we should isCompleted in here to implement sorting / filtering.
 @Entity
 data class Task(
     @PrimaryKey(autoGenerate = true) val taskId: Long = 0,
@@ -39,6 +45,7 @@ data class Task(
     val numOfPodomoroSpend: Int = 0,
     val totalTimeSpent: Int,
     val createdAt: ZonedDateTime,
+    val updatedAt: ZonedDateTime,
 )
 
 @Entity(primaryKeys = ["taskId", "sessionId"])
@@ -76,9 +83,11 @@ interface TaskDao {
     @Update
     suspend fun updateTask(t: Task)
 
-
     @Delete
     suspend fun deleteTask(t: Task)
+
+    @Query("SELECT * FROM task WHERE taskId=:id")
+    fun getTaskById(id: Long): Flow<Task?>
 
     @Query("SELECT * FROM task ORDER BY createdAt DESC")
     fun getTasksOrderByCreatedDate(): Flow<List<Task>>
@@ -100,9 +109,19 @@ interface SessionDao {
     fun getSessionsByStartAt(): Flow<List<Session>>
 }
 
+val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        val formatter = DateTimeFormatter.ISO_DATE_TIME
+        val dt = ZonedDateTime.now()
+        val now = formatter.format(dt)
+        db.execSQL("ALTER TABLE task ADD COLUMN updatedAt TEXT NOT NULL DEFAULT '$now'")
+    }
+}
+
+
 @Database(
     entities = [Task::class, Session::class, TaskSessionCrossRef::class],
-    version = 1
+    version = 2
 )
 @TypeConverters(
     value = [ZonedDateTimeConverter::class]
@@ -110,6 +129,7 @@ interface SessionDao {
 abstract class AppDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao
     abstract fun sessionDao(): SessionDao
+
     companion object {
         @Volatile
         private var Instance: AppDatabase? = null
@@ -118,8 +138,11 @@ abstract class AppDatabase : RoomDatabase() {
             // if the Instance is not null, return it, otherwise create a new database instance.
             return Instance ?: synchronized(this) {
                 Room.databaseBuilder(context, AppDatabase::class.java, "app_database")
+                    .addMigrations(MIGRATION_1_2)
                     .build()
-                    .also { Instance = it }
+                    .also {
+                        Instance = it
+                    }
             }
         }
     }

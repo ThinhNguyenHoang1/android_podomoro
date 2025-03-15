@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.poromodo.MainViewModel
+import com.example.poromodo.R
 import com.example.poromodo.databinding.ItemUserTaskBinding
 import com.example.poromodo.model.Task
 
@@ -21,7 +22,7 @@ class TaskRecyclerViewAdapter(
     ListAdapter<Task, TaskRecyclerViewAdapter.TaskViewHolder>(DiffCallback) {
 
     enum class MenuAction {
-        EDIT, DELETE, MARK_COMPLETE
+        EDIT, DELETE, MARK_COMPLETE, FOCUS
     }
 
     companion object {
@@ -69,6 +70,9 @@ class TaskRecyclerViewAdapter(
             descriptionTextView.visibility = if (isExpanded) View.VISIBLE else View.GONE
             expandIcon.rotation = if (isExpanded) 180f else 0f
 
+            val isCompleted = task.numOfPodomoroSpend == task.numOfPodomoroToComplete
+            val iconResource = if (isCompleted) R.drawable.ic_task_done else R.drawable.ic_task_progress
+            progressIcon.setImageResource(iconResource)
             // Toggle expansion on click
             expandIcon.setOnClickListener {
                 val newState = !isExpanded
@@ -81,11 +85,15 @@ class TaskRecyclerViewAdapter(
                 popupMenu.menu.add(0, 0, 0, "Edit")
                 popupMenu.menu.add(0, 1, 1, "Delete")
                 popupMenu.menu.add(0, 2, 2, "Mark Complete")
+                if (!isCompleted) {
+                    popupMenu.menu.add(0, 3, 3, "Focus")
+                }
                 popupMenu.setOnMenuItemClickListener { menuItem ->
                     when (menuItem.itemId) {
                         0 -> itemCallback(task, MenuAction.EDIT)
                         1 -> itemCallback(task, MenuAction.DELETE)
                         2 -> itemCallback(task, MenuAction.MARK_COMPLETE)
+                        3 -> itemCallback(task, MenuAction.FOCUS)
                     }
                     true
                 }

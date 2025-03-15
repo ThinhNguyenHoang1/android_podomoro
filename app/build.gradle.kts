@@ -66,4 +66,6 @@ dependencies {
     implementation("androidx.room:room-ktx:$room_version")
     testImplementation("androidx.room:room-testing:$room_version")
     implementation("androidx.room:room-paging:$room_version")
+    // Lottie
+    implementation("com.airbnb.android:lottie:6.4.1")
 }

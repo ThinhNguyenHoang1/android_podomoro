@@ -88,6 +88,7 @@ class AddTaskDialogFragment : DialogFragment() {
                         numOfPodomoroToComplete = pomodoros,
                         totalTimeSpent = 0,
                         createdAt = ZonedDateTime.now(),
+                        updatedAt = ZonedDateTime.now()
                     )
                     listener?.onTaskAdded(task)
                     dismiss()
