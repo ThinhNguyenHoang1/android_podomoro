@@ -173,7 +173,6 @@ class HomeFragment : Fragment(), AddTaskDialogFragment.OnTaskAddedListener,
                         when (it) {
                             null -> {
                                 focusedTaskView.tvTaskTitle.text = "No task is focused yet"
-                                focusedTaskView.expandIcon.visibility = View.GONE
                                 focusedTaskView.tvTaskDescription.visibility = View.GONE
                                 focusedTaskView.tvTaskProgress.visibility = View.GONE
                                 focusedTaskView.ivProgressIcon.visibility = View.GONE
@@ -183,7 +182,6 @@ class HomeFragment : Fragment(), AddTaskDialogFragment.OnTaskAddedListener,
                             else -> {
                                 focusedTaskView.tvTaskTitle.text = it.title
                                 focusedTaskView.tvTaskDescription.text = it.description
-                                focusedTaskView.expandIcon.visibility = View.GONE
                                 focusedTaskView.tvTaskDescription.visibility = View.VISIBLE
                                 focusedTaskView.tvTaskProgress.visibility = View.VISIBLE
                                 focusedTaskView.ivProgressIcon.visibility = View.VISIBLE

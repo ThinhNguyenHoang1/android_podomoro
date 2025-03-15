@@ -12,6 +12,10 @@ import com.example.poromodo.ui.stats.StatFragment
 /* TODO:
     Fix the first time loading the code. (Cause: current timeLeft is default from 25 MINUTE instead
     of the current configured value)
+
+    Add sound when complete each phase of the cycle
+
+    Implement the report screen for completeness
  */
 class MainActivity : AppCompatActivity() {
 

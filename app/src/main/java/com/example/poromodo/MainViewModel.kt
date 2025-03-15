@@ -8,6 +8,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.poromodo.model.AppDatabase
 import com.example.poromodo.model.PomodoroPhase
+import com.example.poromodo.model.Session
 import com.example.poromodo.model.Task
 import com.example.poromodo.preferences.BREAK_DEFAULT_DURATION_MIN
 import com.example.poromodo.preferences.DataStoreManager
@@ -16,6 +17,7 @@ import com.example.poromodo.preferences.PODOMORO_DEFAULT_DURATION_MIN
 import com.example.poromodo.preferences.POMODORO_CYCLE
 import com.example.poromodo.preferences.TERMINAL_FOCUS_TASK_ID
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -61,6 +63,7 @@ class MainViewModel(application: Application) :
     private var timerJob: Job? = null
 
     private val taskDao by lazy { AppDatabase.getDatabase(application).taskDao() }
+    private val sessionDao by lazy { AppDatabase.getDatabase(application).sessionDao() }
 
     val progress = combine(
         _timeRemaining,
@@ -91,6 +94,12 @@ class MainViewModel(application: Application) :
                 task
             } else null
         }.filterNotNull()
+
+    private val _podoSetComplete = combine(_timeRemaining, _phase) { t, p ->
+        if (t == 0 && p == PomodoroPhase.PODOMORO) {
+            true
+        } else null
+    }.filterNotNull()
 
     init {
         // Load initial values from DataStore
@@ -130,11 +139,37 @@ class MainViewModel(application: Application) :
                 }
             }
 
+            // TASK_COMPLETE
             launch {
                 _taskToIncreasePodoCount.collectLatest {
                     if (it.numOfPodomoroSpend < it.numOfPodomoroToComplete) {
-                        updateTask(it.copy(numOfPodomoroSpend = it.numOfPodomoroSpend + 1))
+                        val timeAdded = _pomodoroDuration.value
+                        val timeSpent = it.totalTimeSpent + timeAdded
+                        updateTask(
+                            it.copy(
+                                numOfPodomoroSpend = it.numOfPodomoroSpend + 1,
+                                totalTimeSpent = timeSpent
+                            )
+                        )
                     }
+                }
+            }
+
+
+            // PODO_COMPLETE
+            launch {
+                _podoSetComplete.collectLatest {
+                    val timeSpent = _pomodoroDuration.value
+                    val timeBreak = _pomodoroDuration.value
+                    val now = ZonedDateTime.now()
+                    val startFrom = now.plusSeconds(-timeSpent.toLong())
+                    val s = Session(
+                        timeFocus = timeSpent,
+                        timeBreak = timeBreak,
+                        startAt = startFrom,
+                        endAt = now
+                    )
+                    sessionDao.upsertSession(s)
                 }
             }
 
@@ -156,7 +191,6 @@ class MainViewModel(application: Application) :
 
     fun updateTask(t: Task) {
         viewModelScope.launch {
-            Log.d("DELUXE", "NEW TASK: $t")
             taskDao.updateTask(t.copy(updatedAt = ZonedDateTime.now()))
         }
     }
@@ -206,7 +240,7 @@ class MainViewModel(application: Application) :
             cancelTickingJob()
             timerJob = viewModelScope.launch {
                 while (_timeRemaining.value > 0 && _isRunning.value) {
-                    kotlinx.coroutines.delay(1000)
+                    delay(1000)
                     _timeRemaining.emit(_timeRemaining.value - 1)
                 }
                 _isRunning.emit(false)

@@ -1,17 +1,514 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".ui.stats.StatFragment"
-    android:id="@+id/fmStat"
-    >
+    android:layout_height="match_parent">
 
-    <TextView
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/fmStat"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textSize="50sp"
-        android:gravity="center"
-        android:text="DCMMM" />
+        android:layout_height="match_parent"
+        android:padding="16dp"
+        tools:context=".ui.stats.StatFragment">
 
-</FrameLayout>
+        <TextView
+            android:id="@+id/tv_title_stats"
+            style="@style/TextAppearance.AppCompat.Headline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:text="Stats"
+            android:textFontWeight="600"
+            android:textSize="36sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tv_daily_past_week"
+            style="@style/TextAppearance.AppCompat.Title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:text="Daily usage past week"
+            android:minHeight="40dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tv_title_stats" />
+
+        <com.google.android.material.divider.MaterialDivider
+            android:id="@+id/materialDivider"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tv_mon" />
+
+        <ProgressBar
+            android:id="@+id/pb_mon"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="13dp"
+            android:layout_height="208dp"
+            android:layout_centerInParent="true"
+            android:layout_marginStart="20dp"
+            android:max="100"
+            android:progress="33"
+            android:progressDrawable="@drawable/progress_bar_vertical"
+            app:layout_constraintBottom_toTopOf="@+id/tv_mon"
+            app:layout_constraintEnd_toStartOf="@+id/pb_tues"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tv_daily_past_week" />
+
+        <TextView
+            android:id="@+id/tv_mon"
+            style="@style/TextAppearance.AppCompat.Body2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="M"
+            android:textSize="24sp"
+            app:layout_constraintBottom_toTopOf="@+id/materialDivider"
+            app:layout_constraintEnd_toEndOf="@+id/pb_mon"
+            app:layout_constraintStart_toStartOf="@+id/pb_mon"
+            app:layout_constraintTop_toBottomOf="@+id/pb_mon" />
+
+        <ProgressBar
+            android:id="@+id/pb_tues"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="13dp"
+            android:layout_height="208dp"
+            android:layout_centerInParent="true"
+            android:layout_marginStart="20dp"
+            android:max="100"
+            android:progress="50"
+            android:progressDrawable="@drawable/progress_bar_vertical"
+            app:layout_constraintBottom_toTopOf="@+id/tv_tues"
+            app:layout_constraintEnd_toStartOf="@+id/pb_wed"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/pb_mon"
+            app:layout_constraintTop_toBottomOf="@+id/tv_daily_past_week" />
+
+        <TextView
+            android:id="@+id/tv_tues"
+            style="@style/TextAppearance.AppCompat.Body2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="T"
+            android:textSize="24sp"
+            app:layout_constraintBottom_toTopOf="@+id/materialDivider"
+            app:layout_constraintEnd_toEndOf="@+id/pb_tues"
+            app:layout_constraintStart_toStartOf="@+id/pb_tues"
+            app:layout_constraintTop_toBottomOf="@+id/pb_tues" />
+
+        <ProgressBar
+            android:id="@+id/pb_wed"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="13dp"
+            android:layout_height="208dp"
+            android:layout_centerInParent="true"
+            android:layout_marginStart="20dp"
+            android:max="100"
+            android:progress="33"
+            android:progressDrawable="@drawable/progress_bar_vertical"
+            app:layout_constraintBottom_toTopOf="@+id/tv_wed"
+            app:layout_constraintEnd_toStartOf="@+id/pb_thurs"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/pb_tues"
+            app:layout_constraintTop_toBottomOf="@+id/tv_daily_past_week" />
+
+        <TextView
+            android:id="@+id/tv_wed"
+            style="@style/TextAppearance.AppCompat.Body2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="W"
+            android:textSize="24sp"
+            app:layout_constraintBottom_toTopOf="@+id/materialDivider"
+            app:layout_constraintEnd_toEndOf="@+id/pb_wed"
+            app:layout_constraintStart_toStartOf="@+id/pb_wed"
+            app:layout_constraintTop_toBottomOf="@+id/pb_wed" />
+
+        <ProgressBar
+            android:id="@+id/pb_thurs"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="13dp"
+            android:layout_height="208dp"
+            android:layout_centerInParent="true"
+            android:layout_marginStart="20dp"
+            android:max="100"
+            android:progress="33"
+            android:progressDrawable="@drawable/progress_bar_vertical"
+            app:layout_constraintBottom_toTopOf="@+id/tv_thurs"
+            app:layout_constraintEnd_toStartOf="@+id/pb_fri"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/pb_wed"
+            app:layout_constraintTop_toBottomOf="@+id/tv_daily_past_week" />
+
+        <TextView
+            android:id="@+id/tv_thurs"
+            style="@style/TextAppearance.AppCompat.Body2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="T"
+            android:textSize="24sp"
+            app:layout_constraintBottom_toTopOf="@+id/materialDivider"
+            app:layout_constraintEnd_toEndOf="@+id/pb_thurs"
+            app:layout_constraintStart_toStartOf="@+id/pb_thurs"
+            app:layout_constraintTop_toBottomOf="@+id/pb_thurs" />
+
+        <ProgressBar
+            android:id="@+id/pb_fri"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="13dp"
+            android:layout_height="208dp"
+            android:layout_centerInParent="true"
+            android:layout_marginStart="20dp"
+            android:max="100"
+            android:progress="83"
+            android:progressDrawable="@drawable/progress_bar_vertical"
+            app:layout_constraintBottom_toTopOf="@+id/tv_fri"
+            app:layout_constraintEnd_toStartOf="@+id/pb_sat"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/pb_thurs"
+            app:layout_constraintTop_toBottomOf="@+id/tv_daily_past_week" />
+
+        <TextView
+            android:id="@+id/tv_fri"
+            style="@style/TextAppearance.AppCompat.Body2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="F"
+            android:textSize="24sp"
+            app:layout_constraintBottom_toTopOf="@+id/materialDivider"
+            app:layout_constraintEnd_toEndOf="@+id/pb_fri"
+            app:layout_constraintStart_toStartOf="@+id/pb_fri"
+            app:layout_constraintTop_toBottomOf="@+id/pb_fri" />
+
+        <ProgressBar
+            android:id="@+id/pb_sat"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="13dp"
+            android:layout_height="208dp"
+            android:layout_centerInParent="true"
+            android:layout_marginStart="20dp"
+            android:max="100"
+            android:progress="33"
+            android:progressDrawable="@drawable/progress_bar_vertical"
+            app:layout_constraintBottom_toTopOf="@+id/tv_sat"
+            app:layout_constraintEnd_toStartOf="@+id/pb_sun"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/pb_fri"
+            app:layout_constraintTop_toBottomOf="@+id/tv_daily_past_week" />
+
+        <TextView
+            android:id="@+id/tv_sat"
+            style="@style/TextAppearance.AppCompat.Body2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="S"
+            android:textSize="24sp"
+            app:layout_constraintBottom_toTopOf="@+id/materialDivider"
+            app:layout_constraintEnd_toEndOf="@+id/pb_sat"
+            app:layout_constraintStart_toStartOf="@+id/pb_sat"
+            app:layout_constraintTop_toBottomOf="@+id/pb_sat" />
+
+
+        <ProgressBar
+            android:id="@+id/pb_sun"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="13dp"
+            android:layout_height="208dp"
+            android:layout_centerInParent="true"
+            android:layout_marginStart="20dp"
+            android:max="100"
+            android:progress="13"
+            android:progressDrawable="@drawable/progress_bar_vertical"
+            app:layout_constraintBottom_toTopOf="@+id/tv_sun"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/pb_sat"
+            app:layout_constraintTop_toBottomOf="@+id/tv_daily_past_week" />
+
+        <TextView
+            android:id="@+id/tv_sun"
+            style="@style/TextAppearance.AppCompat.Body2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="S"
+            android:textSize="24sp"
+            app:layout_constraintBottom_toTopOf="@+id/materialDivider"
+            app:layout_constraintEnd_toEndOf="@+id/pb_sun"
+            app:layout_constraintStart_toStartOf="@+id/pb_sun"
+            app:layout_constraintTop_toBottomOf="@+id/pb_sun" />
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/card_average_time_week"
+            style="@style/Widget.MaterialComponents.CardView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            app:cardElevation="4dp"
+            app:layout_constraintStart_toEndOf="@id/card_average_reps_week"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/materialDivider">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    style="@style/TextAppearance.AppCompat.Body2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="start"
+                    android:text="Avg. Visits (Week)"
+                    android:textColor="@color/design_default_color_primary"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    style="@style/TextAppearance.AppCompat.Headline"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="start"
+
+                    android:text="70"
+                    android:textFontWeight="700"
+                    android:textSize="40sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <com.airbnb.lottie.LottieAnimationView
+                    android:id="@+id/anim_visit"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:scaleType="centerInside"
+                    app:lottie_autoPlay="true"
+                    app:lottie_loop="true"
+                    app:lottie_rawRes="@raw/work_focus"
+                    android:layout_gravity="center"
+                    />
+
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/card_average_reps_week"
+            style="@style/Widget.MaterialComponents.CardView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            app:cardElevation="4dp"
+            app:layout_constraintEnd_toStartOf="@+id/card_average_time_week"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/materialDivider">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    style="@style/TextAppearance.AppCompat.Body2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="start"
+                    android:text="Avg. Reps (Week)"
+                    android:textColor="@color/design_default_color_primary"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    style="@style/TextAppearance.AppCompat.Headline"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="start"
+                    android:text="14"
+
+                    android:textFontWeight="700"
+                    android:textSize="40sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <com.airbnb.lottie.LottieAnimationView
+                    android:id="@+id/anim_reps"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:scaleType="centerInside"
+                    app:lottie_autoPlay="true"
+                    android:layout_gravity="center"
+                    app:lottie_loop="true"
+                    app:lottie_rawRes="@raw/tomato_reps" />
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+
+        <TextView
+            android:id="@+id/textView10"
+            style="@style/TextAppearance.AppCompat.Title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="16dp"
+            android:gravity="start"
+            android:text="Pomodoros"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/card_average_reps_week" />
+
+        <TextView
+            android:id="@+id/tv_reps_day"
+            style="@style/TextAppearance.AppCompat.Title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="17"
+            app:layout_constraintEnd_toStartOf="@+id/tv_reps_week"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textView10" />
+
+        <TextView
+            android:id="@+id/textView12"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Today"
+            app:layout_constraintEnd_toEndOf="@+id/tv_reps_day"
+            app:layout_constraintStart_toStartOf="@+id/tv_reps_day"
+            app:layout_constraintTop_toBottomOf="@+id/tv_reps_day" />
+
+        <TextView
+            android:id="@+id/tv_reps_week"
+            style="@style/TextAppearance.AppCompat.Title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="50m"
+            app:layout_constraintBottom_toBottomOf="@+id/tv_reps_day"
+            app:layout_constraintEnd_toStartOf="@+id/tv_reps_month"
+            app:layout_constraintStart_toEndOf="@+id/tv_reps_day"
+            app:layout_constraintTop_toTopOf="@+id/tv_reps_day" />
+
+        <TextView
+            android:id="@+id/textView13"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Week"
+            app:layout_constraintEnd_toEndOf="@+id/tv_reps_week"
+            app:layout_constraintStart_toStartOf="@+id/tv_reps_week"
+            app:layout_constraintTop_toBottomOf="@+id/tv_reps_week" />
+
+
+        <TextView
+            android:id="@+id/textView14"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Month"
+            app:layout_constraintEnd_toEndOf="@+id/tv_reps_month"
+            app:layout_constraintStart_toStartOf="@+id/tv_reps_month"
+            app:layout_constraintTop_toBottomOf="@+id/tv_reps_month" />
+
+        <TextView
+            android:id="@+id/tv_reps_month"
+            style="@style/TextAppearance.AppCompat.Title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="50m"
+            app:layout_constraintBottom_toBottomOf="@+id/tv_reps_week"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/tv_reps_week"
+            app:layout_constraintTop_toTopOf="@+id/tv_reps_week" />
+
+        <TextView
+            android:id="@+id/textView9"
+            style="@style/TextAppearance.AppCompat.Title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="16dp"
+            android:gravity="start"
+            android:text="Time"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textView12" />
+
+        <TextView
+            android:id="@+id/tv_time_day"
+            style="@style/TextAppearance.AppCompat.Title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="50m"
+            app:layout_constraintBottom_toBottomOf="@+id/tv_time_week"
+            app:layout_constraintEnd_toStartOf="@+id/tv_time_week"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/tv_time_week" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Today"
+            app:layout_constraintEnd_toEndOf="@+id/tv_time_day"
+            app:layout_constraintStart_toStartOf="@+id/tv_time_day"
+            app:layout_constraintTop_toBottomOf="@+id/tv_time_day" />
+
+        <TextView
+            android:id="@+id/tv_time_week"
+            style="@style/TextAppearance.AppCompat.Title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="150m"
+            app:layout_constraintBottom_toBottomOf="@+id/tv_time_month"
+            app:layout_constraintEnd_toStartOf="@+id/tv_time_month"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/tv_time_day"
+            app:layout_constraintTop_toTopOf="@+id/tv_time_month" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Month"
+            app:layout_constraintEnd_toEndOf="@+id/tv_time_month"
+            app:layout_constraintStart_toStartOf="@+id/tv_time_month"
+            app:layout_constraintTop_toBottomOf="@+id/tv_time_month" />
+
+        <TextView
+            android:id="@+id/tv_time_month"
+            style="@style/TextAppearance.AppCompat.Title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="350m"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/tv_time_week"
+            app:layout_constraintTop_toBottomOf="@+id/textView9" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Week"
+            app:layout_constraintEnd_toEndOf="@+id/tv_time_week"
+            app:layout_constraintStart_toStartOf="@+id/tv_time_week"
+            app:layout_constraintTop_toBottomOf="@+id/tv_time_week" />
+
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/group"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

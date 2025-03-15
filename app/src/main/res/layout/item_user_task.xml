@@ -24,16 +24,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <ImageView
-            android:id="@+id/expand_icon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:contentDescription="Expand/Collapse"
-            android:rotation="0"
-            android:src="@android:drawable/ic_menu_more"
-            app:layout_constraintBottom_toBottomOf="@+id/tv_task_title"
-            app:layout_constraintStart_toEndOf="@+id/tv_task_title"
-            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/tv_task_title"

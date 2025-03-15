@@ -59,7 +59,7 @@ class TaskRecyclerViewAdapter(
         private val progressTv: TextView = binding.tvTaskProgress
         private val taskMenuBtn = binding.btnTaskMenu
         private val itemCallback = menuCallback
-        private val expandIcon = binding.expandIcon
+        private val root = binding.root
 
         fun bind(task: Task) {
             titleTextView.text = task.title
@@ -68,13 +68,13 @@ class TaskRecyclerViewAdapter(
             // Set initial expanded state from ViewModel
             val isExpanded = viewModel.expandedStates.value[task.taskId] == true
             descriptionTextView.visibility = if (isExpanded) View.VISIBLE else View.GONE
-            expandIcon.rotation = if (isExpanded) 180f else 0f
 
             val isCompleted = task.numOfPodomoroSpend == task.numOfPodomoroToComplete
-            val iconResource = if (isCompleted) R.drawable.ic_task_done else R.drawable.ic_task_progress
+            val iconResource =
+                if (isCompleted) R.drawable.ic_task_done else R.drawable.ic_task_progress
             progressIcon.setImageResource(iconResource)
             // Toggle expansion on click
-            expandIcon.setOnClickListener {
+            root.setOnClickListener {
                 val newState = !isExpanded
                 viewModel.setExpandedState(task.taskId, newState)
                 notifyItemChanged(adapterPosition)

@@ -57,7 +57,7 @@ data class TaskSessionCrossRef(
 // Session: (Start) From opening app => Start at least one podomoro => Leave App (End)
 @Entity
 data class Session(
-    @PrimaryKey(autoGenerate = true) val sessionId: Long,
+    @PrimaryKey(autoGenerate = true) val sessionId: Long = 0,
     val timeFocus: Int,
     val timeBreak: Int,
     val startAt: ZonedDateTime,
@@ -100,10 +100,10 @@ interface TaskDao {
 @Dao
 interface SessionDao {
     @Upsert
-    suspend fun upsertSession(contact: Session)
+    suspend fun upsertSession(s: Session)
 
     @Delete
-    suspend fun deleteSession(contact: Session)
+    suspend fun deleteSession(s: Session)
 
     @Query("SELECT * FROM session ORDER BY startAt DESC")
     fun getSessionsByStartAt(): Flow<List<Session>>
