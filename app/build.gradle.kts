@@ -5,22 +5,23 @@ plugins {
 }
 
 android {
-    namespace = "com.example.poromodo"
+    namespace = "com.ahastack.poromodo"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.poromodo"
+        applicationId = "com.ahastack.poromodo"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

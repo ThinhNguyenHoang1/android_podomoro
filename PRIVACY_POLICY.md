@@ -1,4 +1,4 @@
-## Shake Alarm Clock: Privacy policy
+## Pomodoro Clock: Privacy policy
 
 Welcome to the Pomodoro Clock app for Android!
 
@@ -20,4 +20,4 @@ If you find any security vulnerability that has been inadvertently caused by me,
 Yours sincerely,  
 Tony Nguyen.  
 HCM, Vietnam.  
-hoangthinhkg333@gmail.com
+<hoangthinhkg333@gmail.com>
