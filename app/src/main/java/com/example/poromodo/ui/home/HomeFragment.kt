@@ -15,7 +15,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.transition.Visibility
 import com.example.poromodo.MainViewModel
 import com.example.poromodo.R
 import com.example.poromodo.databinding.FragmentHomeBinding
@@ -54,6 +53,15 @@ class HomeFragment : Fragment(), AddTaskDialogFragment.OnTaskAddedListener,
 
         return root
     }
+
+//    private fun startPomodoroService() {
+//        val intent = Intent(activity, PomodoroService::class.java).apply {
+//            action = PomodoroService.ACTION_START
+//            putExtra(PomodoroService.EXTRA_DURATION, vm.timeRemaining.value)
+//            putExtra(PomodoroService.EXTRA_RINGTONE_URI, vm.notificationSoundUri.value)
+//        }
+//        activity?.startForegroundService(intent)
+//    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -110,6 +118,7 @@ class HomeFragment : Fragment(), AddTaskDialogFragment.OnTaskAddedListener,
         button.setOnClickListener {
             if (!vm.isRunning.value) {
                 vm.startTimer()
+//                startPomodoroService()
             } else {
                 vm.pauseTimer()
             }
@@ -175,7 +184,7 @@ class HomeFragment : Fragment(), AddTaskDialogFragment.OnTaskAddedListener,
                                 focusedTaskView.tvTaskTitle.text = "No task is focused yet"
                                 focusedTaskView.tvTaskDescription.visibility = View.GONE
                                 focusedTaskView.tvTaskProgress.visibility = View.GONE
-                                focusedTaskView.ivProgressIcon.visibility = View.GONE
+                                focusedTaskView.ivProgressIcon.visibility = View.INVISIBLE
                                 focusedTaskView.btnTaskMenu.visibility = View.GONE
                             }
 

@@ -1,6 +1,8 @@
 package com.example.poromodo
 
 import android.app.Application
+import android.media.AudioAttributes
+import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.net.Uri
 import android.util.Log
@@ -26,6 +28,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import java.time.ZonedDateTime
+import androidx.core.net.toUri
+import com.example.poromodo.PomodoroService
 
 
 class MainViewModel(application: Application) :
@@ -117,7 +121,7 @@ class MainViewModel(application: Application) :
                     _pomodoroDuration.emit(settings.podomoroDuration * 60)
                     _breakTime.emit(settings.breakTime * 60)
                     _longBreakTime.emit(settings.longBreakTime * 60)
-                    _notificationSoundUri.value = Uri.parse(settings.notiSoundTrack)
+                    _notificationSoundUri.value = settings.notiSoundTrack.toUri()
                     val ph = POMODORO_CYCLE[p]
                     if (_phase.value != ph) {
                         _phase.emit(ph)
@@ -173,6 +177,38 @@ class MainViewModel(application: Application) :
                 }
             }
 
+            // A Phase complete
+            launch {
+               _timeRemaining.collectLatest {
+                   if (it <= 0) {
+                       playRingtone()
+                       DataStoreManager.advanceCycle(application)
+                   }
+               }
+            }
+
+        }
+    }
+    fun playRingtone() {
+        try {
+            val mediaPlayer = MediaPlayer().apply {
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build()
+                )
+                setDataSource(
+                    getApplication(),
+                    _notificationSoundUri.value ?: android.provider.Settings.System.DEFAULT_NOTIFICATION_URI
+                )
+                isLooping = false
+                prepare()
+                start()
+                setOnCompletionListener { it.release() }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
@@ -219,11 +255,6 @@ class MainViewModel(application: Application) :
         _expandedStates.value = currentStates
     }
 
-    fun resetExpandedStates(taskIds: List<Long>) {
-        val newStates = taskIds.associateWith { false }
-        _expandedStates.value = newStates
-    }
-
     fun setPhase(phase: PomodoroPhase) {
         if (_phase.value != phase) {
             cancelTickingJob()
@@ -251,11 +282,6 @@ class MainViewModel(application: Application) :
     fun pauseTimer() {
         cancelTickingJob()
         _isRunning.value = false
-    }
-
-    fun resetTimer() {
-        _isRunning.value = false
-        _timeRemaining.value = _pomodoroDuration.value
     }
 
     private fun cancelTickingJob() {

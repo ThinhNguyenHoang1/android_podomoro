@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:app="http://schemas.android.com/apk/res-auto"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_height="match_parent"
-    android:layout_width="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -15,7 +15,7 @@
         <!-- Segmented Buttons for Phases -->
         <com.google.android.material.button.MaterialButtonToggleGroup
             android:id="@+id/phase_toggle_group"
-            android:layout_width="370dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
@@ -115,7 +115,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="CLICK!!"
-            app:layout_constraintBottom_toTopOf="@+id/focus_task_guideline"
+            app:layout_constraintBottom_toTopOf="@+id/tv_focus"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
@@ -123,13 +123,13 @@
 
         <TextView
             android:id="@+id/tv_task_list"
+            style="@style/TextAppearance.AppCompat.Body1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Tasks"
-            android:textSize="20dp"
-            app:layout_constraintBottom_toTopOf="@+id/rclv_task_list"
+            app:layout_constraintBottom_toBottomOf="@+id/btn_task_add"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/task_list_guide_line" />
+            app:layout_constraintTop_toTopOf="@+id/btn_task_add" />
 
         <Button
             android:id="@+id/btn_task_add"
@@ -137,8 +137,8 @@
             android:layout_height="wrap_content"
             android:text="+ TASK"
             app:layout_constraintBottom_toTopOf="@+id/rclv_task_list"
-            app:layout_constraintEnd_toEndOf="@+id/rclv_task_list"
-            app:layout_constraintTop_toTopOf="@+id/task_list_guide_line" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/focused_task_view" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rclv_task_list"
@@ -149,38 +149,30 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/task_list_guide_line"
+            app:layout_constraintTop_toBottomOf="@+id/tv_task_list"
             tools:itemCount="3"
             tools:listitem="@layout/item_user_task" />
 
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/focus_task_guideline"
+
+        <TextView
+            android:id="@+id/tv_focus"
+            style="@style/TextAppearance.AppCompat.Body1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            app:layout_constraintGuide_begin="404dp" />
+            android:text="Current Task"
+            app:layout_constraintBottom_toTopOf="@id/focused_task_view"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/podomoro_button" />
+
         <include
             android:id="@+id/focused_task_view"
             layout="@layout/item_user_task"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            app:layout_constraintTop_toBottomOf="@id/focus_task_guideline"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/task_list_guide_line"
-            android:layout_marginTop="16dp" />
-
-
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/task_list_guide_line"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            app:layout_constraintGuide_begin="514dp"
-            app:layout_constraintTop_toBottomOf="@id/focused_task_view" />
-
-
+            app:layout_constraintBottom_toTopOf="@id/tv_task_list"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_focus" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

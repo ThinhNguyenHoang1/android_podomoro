@@ -1,5 +1,9 @@
 package com.example.poromodo
 
+import android.content.Intent
+import android.media.RingtoneManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -8,12 +12,7 @@ import com.example.poromodo.databinding.ActivityMainBinding
 import com.example.poromodo.model.AppDatabase
 import com.example.poromodo.ui.home.HomeFragment
 import com.example.poromodo.ui.settings.SettingsFragment
-import com.example.poromodo.ui.stats.StatFragment
-
 /* TODO:
-    Fix the first time loading the code. (Cause: current timeLeft is default from 25 MINUTE instead
-    of the current configured value)
-
     Add sound when complete each phase of the cycle
 
     Implement the report screen for completeness
