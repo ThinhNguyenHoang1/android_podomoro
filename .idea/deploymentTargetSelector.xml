@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-03-15T03:40:00.636571078Z">
+        <DropdownSelection timestamp="2025-03-16T03:30:20.085735860Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=/home/caporegime/.var/app/com.google.AndroidStudio/config/.android/avd/Pixel.avd" />
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=4083d4290507" />
             </handle>
           </Target>
         </DropdownSelection>
