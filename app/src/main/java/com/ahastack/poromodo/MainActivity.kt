@@ -8,6 +8,8 @@ import com.ahastack.poromodo.databinding.ActivityMainBinding
 import com.ahastack.poromodo.model.AppDatabase
 import com.ahastack.poromodo.ui.home.HomeFragment
 import com.ahastack.poromodo.ui.settings.SettingsFragment
+import com.ahastack.poromodo.ui.stats.StatFragment
+
 /* TODO:
     Add sound when complete each phase of the cycle
 
@@ -36,14 +38,14 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         val homeFragment = HomeFragment()
-//        val statFragment = StatFragment()
+        val statFragment = StatFragment()
         val settingsFragment = SettingsFragment()
 
         setCurrentFragment(homeFragment)
         binding.bottomNavigationView.setOnItemSelectedListener {
             when (it.itemId) {
                 R.id.miHome -> setCurrentFragment(homeFragment)
-//                R.id.miStat -> setCurrentFragment(statFragment)
+                R.id.miStat -> setCurrentFragment(statFragment)
                 R.id.miSettings -> setCurrentFragment(settingsFragment)
 
             }

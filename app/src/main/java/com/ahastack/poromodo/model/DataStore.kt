@@ -110,6 +110,10 @@ interface SessionDao {
     fun getSessionsByStartAt(): Flow<List<Session>>
 
     // Reports Data Queries
+    // Select the dates in the week (Left outer join)
+    // Join the date with the date from sessions
+    // Group by the date
+    // Sum the totalMinute
     @Query(
         """
 select "MONDAY" as day ,COALESCE(sum(timeFocus), 0) as totalMinutes from session where DATE(SUBSTRING(startAt,1 , 19)) == DATE('now', 'weekday 0', '-7 days')

@@ -4,10 +4,10 @@
         android:id="@+id/miHome"
         android:icon="@drawable/ic_clock"
         android:title="Home" />
-<!--    <item-->
-<!--        android:id="@+id/miStat"-->
-<!--        android:icon="@drawable/ic_stats"-->
-<!--        android:title="Reports" />-->
+    <item
+        android:id="@+id/miStat"
+        android:icon="@drawable/ic_stats"
+        android:title="Reports" />
     <item
         android:id="@+id/miSettings"
         android:icon="@drawable/ic_settings"
