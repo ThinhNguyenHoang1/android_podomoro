@@ -9,6 +9,9 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.ahastack.poromodo.model.PomodoroPhase
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 
 // Extension property to create a DataStore instance
@@ -40,16 +43,40 @@ data class Settings(
 )
 
 object DataStoreManager {
-    // Define preference keys
+    // Settings preference keys
     private val POMODORO_DURATION_KEY = intPreferencesKey("pomodoro_duration") // In minutes
     private val BREAK_TIME_KEY = intPreferencesKey("break_time") // In minutes
     private val BREAK_LONG_TIME_KEY = intPreferencesKey("long_break_time") // In minutes
     private val NOTIFICATION_SOUND_KEY =
         stringPreferencesKey("notification_sound") // Sound file name
+
+    // Runtime Datastore keys
     private val CURRENT_PODOMORO_CYCLE_INDEX =
         intPreferencesKey("POMODORO_CYCLE_INDEX")
-
     private val CURRENT_FOCUSED_TASK_ID = longPreferencesKey("FOCUSED_TASK")
+    private val TIME_REMAINING = intPreferencesKey("TIME_REMAINING")
+
+
+    private val _timeRemaining = MutableStateFlow<Int>(0)
+    val timerState: StateFlow<Int> = _timeRemaining.asStateFlow()
+
+    fun updateTimeRemaining(v: Int) {
+        _timeRemaining.value = v
+    }
+
+    fun getTimeRemaining(context: Context): Flow<Int> {
+        return context.dataStore.data
+            .map { preferences ->
+                preferences[TIME_REMAINING] ?: 0
+            }
+    }
+
+    suspend fun saveTimeRemaining(context: Context, v: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[TIME_REMAINING] = v
+        }
+    }
+
 
     fun getSettings(context: Context): Flow<Settings> {
         return context.dataStore.data.map { preferences ->
@@ -105,7 +132,7 @@ object DataStoreManager {
     fun getFocusedTaskId(context: Context): Flow<Long> {
         return context.dataStore.data
             .map { preferences ->
-               preferences[CURRENT_FOCUSED_TASK_ID] ?: TERMINAL_FOCUS_TASK_ID
+                preferences[CURRENT_FOCUSED_TASK_ID] ?: TERMINAL_FOCUS_TASK_ID
             }
     }
 
@@ -178,7 +205,6 @@ object DataStoreManager {
             preferences[CURRENT_FOCUSED_TASK_ID] = taskId
         }
     }
-
 
 
 }

@@ -54,8 +54,7 @@ class MainViewModel(application: Application) :
         MutableStateFlow(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
     val notificationSoundUri: StateFlow<Uri> = _notificationSoundUri
 
-    private val _timeRemaining = MutableStateFlow(_pomodoroDuration.value)
-    val timeRemaining: StateFlow<Int> = _timeRemaining
+    val timeRemaining: StateFlow<Int> = DataStoreManager.timerState
 
     private val _isRunning = MutableStateFlow(false)
     val isRunning: StateFlow<Boolean> = _isRunning
@@ -68,7 +67,7 @@ class MainViewModel(application: Application) :
     private val sessionDao by lazy { AppDatabase.getDatabase(application).sessionDao() }
 
     val progress = combine(
-        _timeRemaining,
+        timeRemaining,
         _pomodoroDuration,
         _breakTime,
         _longBreakTime,
@@ -86,7 +85,7 @@ class MainViewModel(application: Application) :
     val focusedTask: StateFlow<Task?> = _focusedTask
 
     private val _taskToIncreasePodoCount =
-        combine(_focusedTask, _timeRemaining, _phase) { task, time, phase ->
+        combine(_focusedTask, timeRemaining, _phase) { task, time, phase ->
             if (time == 0 && task != null && phase == PomodoroPhase.PODOMORO && task.updatedAt.plusSeconds(
                     59
                 ).isBefore(
@@ -97,7 +96,7 @@ class MainViewModel(application: Application) :
             } else null
         }.filterNotNull()
 
-    private val _podoSetComplete = combine(_timeRemaining, _phase) { t, p ->
+    private val _podoSetComplete = combine(timeRemaining, _phase) { t, p ->
         if (t == 0 && p == PomodoroPhase.PODOMORO) {
             true
         } else null
@@ -125,11 +124,12 @@ class MainViewModel(application: Application) :
                         _phase.emit(ph)
                         setPhase(ph)
                     }
-                    when (ph) {
-                        PomodoroPhase.PODOMORO -> _timeRemaining.emit(_pomodoroDuration.value)
-                        PomodoroPhase.BREAK -> _timeRemaining.emit(_breakTime.value)
-                        PomodoroPhase.LONG_BREAK -> _timeRemaining.emit(_longBreakTime.value)
+                    val duration = when (ph) {
+                        PomodoroPhase.PODOMORO -> _pomodoroDuration.value
+                        PomodoroPhase.BREAK -> _breakTime.value
+                        PomodoroPhase.LONG_BREAK -> _longBreakTime.value
                     }
+                    DataStoreManager.saveTimeRemaining(application, duration)
                 }
             }
 
@@ -177,16 +177,17 @@ class MainViewModel(application: Application) :
 
             // A Phase complete
             launch {
-               _timeRemaining.collectLatest {
-                   if (it <= 0) {
-                       playRingtone()
-                       DataStoreManager.advanceCycle(application)
-                   }
-               }
+                timeRemaining.collectLatest {
+                    if (it <= 0) {
+                        playRingtone()
+                        DataStoreManager.advanceCycle(application)
+                    }
+                }
             }
 
         }
     }
+
     fun playRingtone() {
         try {
             val mediaPlayer = MediaPlayer().apply {
@@ -198,7 +199,8 @@ class MainViewModel(application: Application) :
                 )
                 setDataSource(
                     getApplication(),
-                    _notificationSoundUri.value ?: android.provider.Settings.System.DEFAULT_NOTIFICATION_URI
+                    _notificationSoundUri.value
+                        ?: android.provider.Settings.System.DEFAULT_NOTIFICATION_URI
                 )
                 isLooping = false
                 prepare()
@@ -268,9 +270,9 @@ class MainViewModel(application: Application) :
             _isRunning.value = true
             cancelTickingJob()
             timerJob = viewModelScope.launch {
-                while (_timeRemaining.value > 0 && _isRunning.value) {
+                while (timeRemaining.value > 0 && _isRunning.value) {
                     delay(1000)
-                    _timeRemaining.emit(_timeRemaining.value - 1)
+                    timeRemaining.emit(timeRemaining.value - 1)
                 }
                 _isRunning.emit(false)
             }

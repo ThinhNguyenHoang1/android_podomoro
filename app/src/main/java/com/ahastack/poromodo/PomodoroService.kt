@@ -25,6 +25,7 @@ class PomodoroService : Service() {
         const val NOTIFICATION_ID = 1
         const val ACTION_START = "ACTION_START"
         const val ACTION_STOP = "ACTION_STOP"
+        const val ACTION_SKIP = "ACTION_SKIP"
         const val EXTRA_RINGTONE_URI = "EXTRA_RINGTONE_URI"
         const val EXTRA_DURATION = "EXTRA_DURATION"
     }
