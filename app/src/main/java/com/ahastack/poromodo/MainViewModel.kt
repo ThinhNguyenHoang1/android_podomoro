@@ -1,6 +1,7 @@
 package com.ahastack.poromodo
 
 import android.app.Application
+import android.content.Intent
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.media.RingtoneManager
@@ -28,6 +29,9 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import java.time.ZonedDateTime
 import androidx.core.net.toUri
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.WhileSubscribed
+import kotlinx.coroutines.flow.stateIn
 
 
 class MainViewModel(application: Application) :
@@ -38,6 +42,7 @@ class MainViewModel(application: Application) :
     private val _expandedStates = MutableStateFlow<Map<Long, Boolean>>(emptyMap())
     val expandedStates: StateFlow<Map<Long, Boolean>> = _expandedStates
 
+    private val context = application
 
     private val _pomodoroDuration =
         MutableStateFlow(PODOMORO_DEFAULT_DURATION_MIN * 60) // Default in seconds
@@ -50,18 +55,10 @@ class MainViewModel(application: Application) :
         MutableStateFlow(LONG_BREAK_DEFAULT_DURATION_MIN * 60) // Default in seconds
     val longBreakTime: StateFlow<Int> = _longBreakTime
 
-    private val _notificationSoundUri =
-        MutableStateFlow(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
-    val notificationSoundUri: StateFlow<Uri> = _notificationSoundUri
 
     val timeRemaining: StateFlow<Int> = DataStoreManager.timerState
 
-    private val _isRunning = MutableStateFlow(false)
-    val isRunning: StateFlow<Boolean> = _isRunning
-
-
-    // Job to manage the timer coroutine
-    private var timerJob: Job? = null
+    val isRunning: StateFlow<Boolean> = DataStoreManager.getIsRunning(application).stateIn(scope = viewModelScope, started = SharingStarted.WhileSubscribed(5000), initialValue = false)
 
     private val taskDao by lazy { AppDatabase.getDatabase(application).taskDao() }
     private val sessionDao by lazy { AppDatabase.getDatabase(application).sessionDao() }
@@ -118,7 +115,6 @@ class MainViewModel(application: Application) :
                     _pomodoroDuration.emit(settings.podomoroDuration * 60)
                     _breakTime.emit(settings.breakTime * 60)
                     _longBreakTime.emit(settings.longBreakTime * 60)
-                    _notificationSoundUri.value = settings.notiSoundTrack.toUri()
                     val ph = POMODORO_CYCLE[p]
                     if (_phase.value != ph) {
                         _phase.emit(ph)
@@ -179,36 +175,11 @@ class MainViewModel(application: Application) :
             launch {
                 timeRemaining.collectLatest {
                     if (it <= 0) {
-                        playRingtone()
                         DataStoreManager.advanceCycle(application)
                     }
                 }
             }
 
-        }
-    }
-
-    fun playRingtone() {
-        try {
-            val mediaPlayer = MediaPlayer().apply {
-                setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                        .build()
-                )
-                setDataSource(
-                    getApplication(),
-                    _notificationSoundUri.value
-                        ?: android.provider.Settings.System.DEFAULT_NOTIFICATION_URI
-                )
-                isLooping = false
-                prepare()
-                start()
-                setOnCompletionListener { it.release() }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
         }
     }
 
@@ -257,8 +228,6 @@ class MainViewModel(application: Application) :
 
     fun setPhase(phase: PomodoroPhase) {
         if (_phase.value != phase) {
-            cancelTickingJob()
-            _isRunning.value = false
             viewModelScope.launch {
                 DataStoreManager.switchToNextDesiredPhase(getApplication(), phase)
             }
@@ -266,32 +235,24 @@ class MainViewModel(application: Application) :
     }
 
     fun startTimer() {
-        if (!_isRunning.value) {
-            _isRunning.value = true
-            cancelTickingJob()
-            timerJob = viewModelScope.launch {
-                while (timeRemaining.value > 0 && _isRunning.value) {
-                    delay(1000)
-                    timeRemaining.emit(timeRemaining.value - 1)
-                }
-                _isRunning.emit(false)
+        viewModelScope.launch {
+            val intent = Intent(context, PomodoroService::class.java).apply {
+                action = PomodoroService.ACTION_START
             }
+            DataStoreManager.startTheClock(getApplication())
+            context.startForegroundService(intent)
         }
     }
 
     fun pauseTimer() {
-        cancelTickingJob()
-        _isRunning.value = false
+        viewModelScope.launch {
+            DataStoreManager.stopTheClock(getApplication())
+        }
     }
 
-    private fun cancelTickingJob() {
-        timerJob?.cancel()
-        timerJob = null // Reset the job reference
-    }
 
     override fun onCleared() {
         super.onCleared()
-        cancelTickingJob()
         // Cleanup if needed
     }
 

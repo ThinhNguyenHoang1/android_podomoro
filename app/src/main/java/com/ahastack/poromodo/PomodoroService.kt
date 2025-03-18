@@ -1,24 +1,36 @@
 package com.ahastack.poromodo
 
+import android.Manifest.permission.POST_NOTIFICATIONS
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.media.AudioAttributes
 import android.media.MediaPlayer
-import android.net.Uri
-import android.os.CountDownTimer
+import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
-import androidx.core.net.toUri
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import com.ahastack.poromodo.model.PomodoroPhase
+import com.ahastack.poromodo.preferences.DataStoreManager
+import com.ahastack.poromodo.preferences.POMODORO_CYCLE
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 class PomodoroService : Service() {
     private var mediaPlayer: MediaPlayer? = null
-    private var selectedRingtoneUri: Uri? = null
-    private var countdownTimer: CountDownTimer? = null
     private val notificationManager by lazy { getSystemService(NOTIFICATION_SERVICE) as NotificationManager }
+    private var isStarted = false
+    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     companion object {
         const val CHANNEL_ID = "PomodoroChannel"
@@ -32,64 +44,70 @@ class PomodoroService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        createNotificationChannel()
+        createServiceNotificationChannel()
         Log.d("KKKK", "onCreate: ")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d("KKKK", "onStart: ${intent.toString()}")
+        Log.d("KKKK", "onStart: ${intent}")
+        if (!isStarted) {
+            isStarted = true
+        }
+        makeForeground()
+
         when (intent?.action) {
             ACTION_START -> {
-                val duration = intent.getLongExtra(EXTRA_DURATION, 25 * 60 * 1000) // Default 25 minutes
-                selectedRingtoneUri = intent.getStringExtra(EXTRA_RINGTONE_URI)?.toUri()
-                startPomodoro(duration)
             }
-            ACTION_STOP -> stopPomodoro()
+
+            ACTION_SKIP -> {
+
+            }
         }
         return START_STICKY
     }
 
-    private fun createNotificationChannel() {
+    private fun createServiceNotificationChannel() {
         val channel = NotificationChannel(
             CHANNEL_ID,
             "Pomodoro Timer",
-            NotificationManager.IMPORTANCE_LOW
+            NotificationManager.IMPORTANCE_HIGH
+
         )
+        channel.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         notificationManager.createNotificationChannel(channel)
     }
 
-    private fun startPomodoro(duration: Long) {
-        Log.d("KKKK", "SERVICE:startPodomoro: $duration")
-        countdownTimer?.cancel()
 
-        val notificationIntent = Intent(this, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+    private fun makeForeground() {
+        Log.d("KKKK", "LAUNCHING NOTI")
 
-        countdownTimer = object : CountDownTimer(duration, 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                val minutes = millisUntilFinished / 60000
-                val seconds = (millisUntilFinished % 60000) / 1000
-                val timeLeft = String.format("%02d:%02d", minutes, seconds)
+        val notification: Notification =
+            NotificationCompat.Builder(this@PomodoroService, CHANNEL_ID)
+                .setContentTitle("Pomodoro Timer")
+                .setContentText("Keep track of your state")
+                .setSmallIcon(R.drawable.ic_pomo_foreground)
+                .build()
+        startForeground(NOTIFICATION_ID, notification)
 
-                val notification = NotificationCompat.Builder(this@PomodoroService, CHANNEL_ID)
-                    .setContentTitle("Pomodoro Running")
-                    .setContentText("Time remaining: $timeLeft")
-                    .setSmallIcon(R.drawable.ic_clock) // Add your timer icon
-                    .setContentIntent(pendingIntent)
-                    .setOngoing(true)
-                    .build()
-
-                startForeground(NOTIFICATION_ID, notification)
-            }
-
-            override fun onFinish() {
-                playRingtone()
-                stopForeground(STOP_FOREGROUND_REMOVE)
-                stopSelf()
-            }
-        }.start()
+//        createServiceNotificationChannel()
+//        scope.launch {
+//            val cPh = DataStoreManager.getCurrentCyclePhase(this@PomodoroService).first()
+//            val ic = when (cPh) {
+//                PomodoroPhase.PODOMORO -> R.drawable.ic_pomo_foreground
+//                PomodoroPhase.BREAK -> R.drawable.ic_break_short
+//                PomodoroPhase.LONG_BREAK -> R.drawable.ic_break_long
+//            }
+//            val notification: Notification =
+//                NotificationCompat.Builder(this@PomodoroService, CHANNEL_ID)
+//                    .setContentTitle("Pomodoro Timer")
+//                    .setContentText("Keep track of your state")
+//                    .setSmallIcon(ic)
+////                    .setContentIntent(pendingIntent)
+//                    .build()
+//            startForeground(NOTIFICATION_ID, notification)
+//        }
     }
+
 
     private fun playRingtone() {
         try {
@@ -103,7 +121,7 @@ class PomodoroService : Service() {
                 )
                 setDataSource(
                     this@PomodoroService,
-                    selectedRingtoneUri ?: android.provider.Settings.System.DEFAULT_NOTIFICATION_URI
+                    android.provider.Settings.System.DEFAULT_NOTIFICATION_URI
                 )
                 isLooping = false
                 prepare()
@@ -115,15 +133,8 @@ class PomodoroService : Service() {
         }
     }
 
-    private fun stopPomodoro() {
-        countdownTimer?.cancel()
-        mediaPlayer?.release()
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        stopSelf()
-    }
 
     override fun onDestroy() {
-        countdownTimer?.cancel()
         mediaPlayer?.release()
         super.onDestroy()
     }

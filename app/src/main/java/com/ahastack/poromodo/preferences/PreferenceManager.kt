@@ -1,18 +1,28 @@
 package com.ahastack.poromodo.preferences
 
 import android.content.Context
+import androidx.datastore.preferences.core.MutablePreferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.ahastack.poromodo.model.PomodoroPhase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.minutes
 
 // Extension property to create a DataStore instance
 val Context.dataStore by preferencesDataStore(name = "pomodoro_settings")
@@ -55,20 +65,45 @@ object DataStoreManager {
         intPreferencesKey("POMODORO_CYCLE_INDEX")
     private val CURRENT_FOCUSED_TASK_ID = longPreferencesKey("FOCUSED_TASK")
     private val TIME_REMAINING = intPreferencesKey("TIME_REMAINING")
+    private val IS_RUNNING = booleanPreferencesKey("IS_RUNNING")
 
 
+    private var timerJob: Job? = null
     private val _timeRemaining = MutableStateFlow<Int>(0)
     val timerState: StateFlow<Int> = _timeRemaining.asStateFlow()
 
-    fun updateTimeRemaining(v: Int) {
-        _timeRemaining.value = v
+    private fun cancelTickingJob() {
+        timerJob?.cancel()
+        timerJob = null // Reset the job reference
     }
 
-    fun getTimeRemaining(context: Context): Flow<Int> {
-        return context.dataStore.data
-            .map { preferences ->
-                preferences[TIME_REMAINING] ?: 0
+    // TODO: Maybe bug in concurreny. As the timerJob maybe set before the edit update the values
+    suspend fun startTheClock(context: Context) {
+        cancelTickingJob()
+        context.dataStore.edit { p ->
+            p[IS_RUNNING] = true
+            _timeRemaining.value = p[TIME_REMAINING] ?: 0
+        }
+
+        timerJob = CoroutineScope(Dispatchers.Default).launch {
+            flow {
+                while (_timeRemaining.value > 0) {
+                    delay(1000)
+                    emit(Unit)
+                }
+            }.collect {
+                if (_timeRemaining.value > 0)
+                    _timeRemaining.value = _timeRemaining.value - 1
             }
+        }
+    }
+
+    suspend fun stopTheClock(context: Context) {
+        cancelTickingJob()
+        context.dataStore.edit { p ->
+            p[IS_RUNNING] = false
+        }
+        saveTimeRemaining(context, _timeRemaining.value)
     }
 
     suspend fun saveTimeRemaining(context: Context, v: Int) {
@@ -77,6 +112,19 @@ object DataStoreManager {
         }
     }
 
+    fun getIsRunning(context: Context): Flow<Boolean> {
+        return context.dataStore.data.map { p ->
+            p[IS_RUNNING] == true
+        }
+    }
+
+    fun getCurrentCyclePhase(context:Context): Flow<PomodoroPhase> {
+        return context.dataStore.data.map { p ->
+            val cIdx = p[CURRENT_PODOMORO_CYCLE_INDEX] ?: 0
+            val ph = POMODORO_CYCLE[cIdx]
+            ph
+        }
+    }
 
     fun getSettings(context: Context): Flow<Settings> {
         return context.dataStore.data.map { preferences ->
@@ -167,6 +215,8 @@ object DataStoreManager {
     suspend fun savePomodoroCycleIndex(context: Context, index: Int) {
         context.dataStore.edit { preferences ->
             preferences[CURRENT_PODOMORO_CYCLE_INDEX] = index
+            val s = getDurationFromPomodoroIndex(preferences, index)
+            preferences[TIME_REMAINING] = s
         }
     }
 
@@ -177,6 +227,21 @@ object DataStoreManager {
         }
     }
 
+    fun getDurationFromPomodoroIndex(p: MutablePreferences, idx: Int?): Int {
+        val cIdx = idx ?: 0
+        val ph = POMODORO_CYCLE[cIdx]
+        val d = when (ph) {
+            PomodoroPhase.PODOMORO -> p[POMODORO_DURATION_KEY]
+            PomodoroPhase.BREAK -> p[BREAK_TIME_KEY]
+            PomodoroPhase.LONG_BREAK -> p[BREAK_LONG_TIME_KEY]
+        }
+        val s = if (d == null) 0 else d * 60
+        _timeRemaining.value = s
+        return s
+    }
+
+
+
     suspend fun switchToNextDesiredPhase(context: Context, phase: PomodoroPhase) {
         context.dataStore.edit { preferences ->
             val curr = preferences[CURRENT_PODOMORO_CYCLE_INDEX] ?: 0
@@ -185,6 +250,8 @@ object DataStoreManager {
             for (idx in (curr + 1) % s..s - 1) {
                 if (POMODORO_CYCLE[idx] == phase) {
                     preferences[CURRENT_PODOMORO_CYCLE_INDEX] = idx
+                    val s = getDurationFromPomodoroIndex(preferences, idx)
+                    preferences[TIME_REMAINING] = s
                     return@edit
                 }
             }
@@ -193,10 +260,11 @@ object DataStoreManager {
             for (idx in 0..s - 1) {
                 if (POMODORO_CYCLE[idx] == phase) {
                     preferences[CURRENT_PODOMORO_CYCLE_INDEX] = idx
+                    val s = getDurationFromPomodoroIndex(preferences, idx)
+                    preferences[TIME_REMAINING] = s
                     return@edit
                 }
             }
-
         }
     }
 
@@ -205,6 +273,4 @@ object DataStoreManager {
             preferences[CURRENT_FOCUSED_TASK_ID] = taskId
         }
     }
-
-
 }
