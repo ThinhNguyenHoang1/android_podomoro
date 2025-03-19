@@ -104,32 +104,6 @@ class MainViewModel(application: Application) :
         val context = application.applicationContext
         viewModelScope.launch {
             launch {
-                combine(
-                    DataStoreManager.getSettings(context),
-                    DataStoreManager.getPomodoroCurrentCycleIndex(context)
-                ) { s, p ->
-                    Pair(s, p)
-                }.collectLatest { pair ->
-                    val settings = pair.first
-                    val p = pair.second
-                    _pomodoroDuration.emit(settings.podomoroDuration * 60)
-                    _breakTime.emit(settings.breakTime * 60)
-                    _longBreakTime.emit(settings.longBreakTime * 60)
-                    val ph = POMODORO_CYCLE[p]
-                    if (_phase.value != ph) {
-                        _phase.emit(ph)
-                        setPhase(ph)
-                    }
-                    val duration = when (ph) {
-                        PomodoroPhase.PODOMORO -> _pomodoroDuration.value
-                        PomodoroPhase.BREAK -> _breakTime.value
-                        PomodoroPhase.LONG_BREAK -> _longBreakTime.value
-                    }
-                    DataStoreManager.saveTimeRemaining(application, duration)
-                }
-            }
-
-            launch {
                 DataStoreManager.getFocusedTaskId(context).collectLatest { tid ->
                     taskDao.getTaskById(tid).collectLatest { task ->
                         _focusedTask.emit(task)

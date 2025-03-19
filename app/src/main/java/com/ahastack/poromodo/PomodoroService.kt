@@ -24,6 +24,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.launch
 
 class PomodoroService : Service() {
@@ -80,32 +81,17 @@ class PomodoroService : Service() {
 
     private fun makeForeground() {
         Log.d("KKKK", "LAUNCHING NOTI")
-
-        val notification: Notification =
-            NotificationCompat.Builder(this@PomodoroService, CHANNEL_ID)
-                .setContentTitle("Pomodoro Timer")
-                .setContentText("Keep track of your state")
-                .setSmallIcon(R.drawable.ic_pomo_foreground)
-                .build()
-        startForeground(NOTIFICATION_ID, notification)
-
-//        createServiceNotificationChannel()
-//        scope.launch {
-//            val cPh = DataStoreManager.getCurrentCyclePhase(this@PomodoroService).first()
-//            val ic = when (cPh) {
-//                PomodoroPhase.PODOMORO -> R.drawable.ic_pomo_foreground
-//                PomodoroPhase.BREAK -> R.drawable.ic_break_short
-//                PomodoroPhase.LONG_BREAK -> R.drawable.ic_break_long
-//            }
-//            val notification: Notification =
-//                NotificationCompat.Builder(this@PomodoroService, CHANNEL_ID)
-//                    .setContentTitle("Pomodoro Timer")
-//                    .setContentText("Keep track of your state")
-//                    .setSmallIcon(ic)
-////                    .setContentIntent(pendingIntent)
-//                    .build()
-//            startForeground(NOTIFICATION_ID, notification)
-//        }
+        scope.launch {
+            val timeLeft = DataStoreManager.timerState.value
+            val timeTotal = DataStoreManager.getCurrentClockMaxTime(this@PomodoroService).last()
+            val notification: Notification =
+                NotificationCompat.Builder(this@PomodoroService, CHANNEL_ID)
+                    .setContentTitle("Pomodoro Timer")
+                    .setContentText("$timeLeft / $timeTotal")
+                    .setSmallIcon(R.drawable.ic_pomo_foreground)
+                    .build()
+            startForeground(NOTIFICATION_ID, notification)
+        }
     }
 
 

@@ -1,5 +1,6 @@
 package com.ahastack.poromodo.ui.settings
 
+import android.app.Activity
 import android.content.Intent
 import android.media.RingtoneManager
 import android.net.Uri
@@ -23,13 +24,14 @@ import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.ahastack.poromodo.preferences.Settings
 
 class SettingsFragment : Fragment() {
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
 
-    private var selectedRingtoneTitle: String? = null
-    private var selectedRingtoneUri: Uri? = null
+    private var selectedRingtoneTitle: String = ""
+    private lateinit var selectedRingtoneUri: Uri
 
     // Register Activity Result Launcher for Ringtone Picker
     private var ringtonePickerLauncher: ActivityResultLauncher<Intent>? = null
@@ -43,15 +45,14 @@ class SettingsFragment : Fragment() {
         super.onCreate(savedInstanceState)
         ringtonePickerLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (result.resultCode == android.app.Activity.RESULT_OK) {
+                if (result.resultCode == Activity.RESULT_OK) {
                     val uri: Uri? =
                         result.data?.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
                     if (uri != null) {
                         selectedRingtoneUri = uri
                         binding.notificationSoundInput.text = getSoundTrackTitleFromUri(uri)
                     } else {
-                        selectedRingtoneUri = null
-                        selectedRingtoneTitle = null
+                        selectedRingtoneTitle = ""
                         binding.notificationSoundInput.text = "Select a ringtone"
                     }
                 }
@@ -74,40 +75,21 @@ class SettingsFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(state = Lifecycle.State.STARTED) {
                 launch {
-                    DataStoreManager.getPomodoroDuration(requireContext()).collectLatest {
-                        binding.pomodoroDurationInput.setText(it.toString())
-                    }
-                }
+                    DataStoreManager.getSettings(requireContext()).collectLatest {
+                        binding.pomodoroDurationInput.setText(it.podomoroDuration)
+                        binding.breakTimeInput.setText(it.breakTime)
+                        binding.breakLongTimeInput.setText(it.longBreakTime)
 
-                launch {
-                    DataStoreManager.getBreakTime(requireContext()).collectLatest {
-                        binding.breakTimeInput.setText(it.toString())
-                    }
-                }
-
-                launch {
-                    DataStoreManager.getLongBreakTime(requireContext()).collectLatest {
-                        binding.breakLongTimeInput.setText(it.toString())
-                    }
-                }
-
-                launch {
-                    DataStoreManager.getNotificationSound(requireContext()).collectLatest {
-                        val uri = it.toUri()
-                        selectedRingtoneUri = uri
-                        val title = getSoundTrackTitleFromUri(uri)
-                        Log.d("KAPPA", "onViewCreated: TITLE: $title")
+                        selectedRingtoneUri = it.notiSoundTrack.toUri()
+                        val title = getSoundTrackTitleFromUri(selectedRingtoneUri)
                         binding.notificationSoundInput.text = title
                     }
                 }
             }
         }
         // Listener
-        val soundSpinner = binding.notificationSoundInput
         val defaultRingtoneUri =
             RingtoneManager.getActualDefaultRingtoneUri(activity, RingtoneManager.TYPE_RINGTONE)
-        val defaultRingtone = RingtoneManager.getRingtone(activity, defaultRingtoneUri)
-        val defaultRingtoneName = defaultRingtone.getTitle(activity)
         binding.notificationSoundChangeBtn.setOnClickListener {
             val intent = Intent(RingtoneManager.ACTION_RINGTONE_PICKER).apply {
                 putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_ALL)
@@ -118,19 +100,16 @@ class SettingsFragment : Fragment() {
                     RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
                 )
                 // If there’s a previously selected URI, pass it to pre-select in the picker
-                selectedRingtoneUri?.let {
-                    putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, it)
-                }
+                putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, selectedRingtoneUri)
             }
             ringtonePickerLauncher?.launch(intent)
         }
         binding.saveButton.setOnClickListener {
-            val podomoroDuration = binding.pomodoroDurationInput.text.toString().toInt()
+            val pomodoroDuration = binding.pomodoroDurationInput.text.toString().toInt()
             val breakDuration = binding.breakTimeInput.text.toString().toInt()
             val longBreakDuration = binding.breakLongTimeInput.text.toString().toInt()
-            // Validation
             when {
-                podomoroDuration == 0 -> {
+                pomodoroDuration == 0 -> {
                     binding.pomodoroDurationLayout.error = "Enter valid duration"
                     return@setOnClickListener
                 }
@@ -148,29 +127,19 @@ class SettingsFragment : Fragment() {
                 else -> {
                     CoroutineScope(Dispatchers.IO).launch {
                         launch {
-                            DataStoreManager.savePomodoroDuration(
+                            DataStoreManager.saveSettings(
                                 requireContext(),
-                                podomoroDuration
-                            )
-                        }
-
-                        launch {
-                            DataStoreManager.saveBreakTime(requireContext(), breakDuration)
-                        }
-
-                        launch {
-                            DataStoreManager.saveLongBreakTime(requireContext(), longBreakDuration)
-                        }
-
-                        launch {
-                            DataStoreManager.saveNotificationSound(
-                                requireContext(),
-                                selectedRingtoneUri.toString()
+                                Settings(
+                                    podomoroDuration = pomodoroDuration,
+                                    breakTime = breakDuration,
+                                    longBreakTime = longBreakDuration,
+                                    notiSoundTrack = selectedRingtoneUri.toString()
+                                )
                             )
                         }
 
                         withContext(Dispatchers.Main) {
-                            Snackbar.make(view, "Setting Saved!", Snackbar.LENGTH_SHORT).show()
+                            Snackbar.make(view, "Setting Updated!", Snackbar.LENGTH_SHORT).show()
                         }
                     }
                 }
