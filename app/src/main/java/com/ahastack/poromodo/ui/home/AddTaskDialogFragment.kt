@@ -25,11 +25,6 @@ class AddTaskDialogFragment : DialogFragment() {
     }
 
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-//        setStyle(STYLE_NORMAL, R.style.FullScreenDialog)
-    }
-
     override fun onStart() {
         super.onStart()
         dialog?.window?.let { window ->

@@ -51,15 +51,6 @@ class HomeFragment : Fragment(), AddTaskDialogFragment.OnTaskAddedListener,
         return root
     }
 
-//    private fun startPomodoroService() {
-//        val intent = Intent(activity, PomodoroService::class.java).apply {
-//            action = PomodoroService.ACTION_START
-//            putExtra(PomodoroService.EXTRA_DURATION, vm.timeRemaining.value)
-//            putExtra(PomodoroService.EXTRA_RINGTONE_URI, vm.notificationSoundUri.value)
-//        }
-//        activity?.startForegroundService(intent)
-//    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -132,7 +123,7 @@ class HomeFragment : Fragment(), AddTaskDialogFragment.OnTaskAddedListener,
 
                 launch {
                     vm.progress.collectLatest {
-                        progressBar.progress = it.toInt()
+                        progressBar.progress = it
                     }
                 }
                 launch {
@@ -153,8 +144,8 @@ class HomeFragment : Fragment(), AddTaskDialogFragment.OnTaskAddedListener,
                     }
                 }
                 launch {
-                    vm.phase.collectLatest {
-                        when (it) {
+                    vm.timerInstance.collectLatest {
+                        when (it.currentPhase) {
                             PomodoroPhase.PODOMORO -> {
                                 phaseToggleGroup.check(R.id.phase_pomodoro)
                                 binding.statusLottie.setAnimation(R.raw.tomato_lottie)
@@ -225,7 +216,7 @@ class HomeFragment : Fragment(), AddTaskDialogFragment.OnTaskAddedListener,
                                             }
 
                                             3 -> {
-                                                vm.unFocusTask(it)
+                                                vm.unFocusTask()
                                             }
                                         }
                                         true

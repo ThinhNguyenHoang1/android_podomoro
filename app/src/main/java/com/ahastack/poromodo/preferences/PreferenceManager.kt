@@ -47,7 +47,7 @@ data class Settings(
     val podomoroDuration: Int = PODOMORO_DEFAULT_DURATION_MIN,
     val breakTime: Int = BREAK_DEFAULT_DURATION_MIN,
     val longBreakTime: Int = LONG_BREAK_DEFAULT_DURATION_MIN,
-    val notiSoundTrack: String
+    val notiSoundTrack: String = ""
 )
 
 data class TimerInstance(
@@ -69,10 +69,9 @@ object DataStoreManager {
 
     // Runtime Datastore keys
     private val TI_CURRENT_CYCLE_INDEX = intPreferencesKey("POMODORO_CYCLE_INDEX")
-    private val TI_CURRENT_FOCUSED_TASK_ID = longPreferencesKey("FOCUSED_TASK")
     private val TI_TIME_REMAINING = intPreferencesKey("TIME_REMAINING")
     private val TI_IS_RUNNING = booleanPreferencesKey("IS_RUNNING")
-
+    private val TI_CURRENT_FOCUSED_TASK_ID = longPreferencesKey("FOCUSED_TASK")
 
     private var timerJob: Job? = null
     private val _timeRemaining = MutableStateFlow<Int>(0)
@@ -111,7 +110,7 @@ object DataStoreManager {
         }
     }
 
-    fun getDurationFromCycleIndex(p: Preferences, idx: Int?): Int {
+    private fun getDurationFromCycleIndex(p: Preferences, idx: Int?): Int {
         val cIdx = idx ?: 0
         val ph = POMODORO_CYCLE[cIdx]
         val d = when (ph) {
@@ -164,18 +163,33 @@ object DataStoreManager {
             )
         }
     }
-
-    fun getIsRunning(context: Context) : Flow<Boolean> {
-        return context.dataStore.data.map { p ->
-            p[TI_IS_RUNNING] == true
-        }
-    }
+//    suspend fun saveTimerInstance(context: Context, ti: TimerInstance) {
+//        context.dataStore.edit { p ->
+//            p[TI_IS_RUNNING] = ti.isRunning
+//            p[TI_TIME_REMAINING] = ti.timeLeft
+//            p[TI_CURRENT_CYCLE_INDEX] = ti.currentCycleIdx
+//        }
+//    }
+//
+//    fun getIsRunning(context: Context) : Flow<Boolean> {
+//        return context.dataStore.data.map { p ->
+//            p[TI_IS_RUNNING] == true
+//        }
+//    }
     fun getFocusedTaskId(context: Context): Flow<Long> {
         return context.dataStore.data
             .map { preferences ->
                 preferences[TI_CURRENT_FOCUSED_TASK_ID] ?: TERMINAL_FOCUS_TASK_ID
             }
     }
+
+    suspend fun saveFocusTaskId(context: Context, taskId: Long) {
+        context.dataStore.edit { preferences ->
+            preferences[TI_CURRENT_FOCUSED_TASK_ID] = taskId
+        }
+    }
+
+
 
     suspend fun advanceCycle(context: Context) {
         context.dataStore.edit { preferences ->
@@ -190,30 +204,25 @@ object DataStoreManager {
             val curr = preferences[TI_CURRENT_CYCLE_INDEX] ?: 0
             val s = POMODORO_CYCLE.size
             // This loop may not find a podomoro phase if we are currently after the last short break
-            for (idx in (curr + 1) % s..s - 1) {
+            for (idx in (curr + 1) % s..<s) {
                 if (POMODORO_CYCLE[idx] == phase) {
                     preferences[TI_CURRENT_CYCLE_INDEX] = idx
-                    val s = getDurationFromCycleIndex(preferences, idx)
-                    preferences[TI_TIME_REMAINING] = s
+                    val seconds = getDurationFromCycleIndex(preferences, idx)
+                    preferences[TI_TIME_REMAINING] = seconds
                     return@edit
                 }
             }
 
             // Therefore: We must Wrap around
-            for (idx in 0..s - 1) {
+            for (idx in 0..<s) {
                 if (POMODORO_CYCLE[idx] == phase) {
                     preferences[TI_CURRENT_CYCLE_INDEX] = idx
-                    val s = getDurationFromCycleIndex(preferences, idx)
-                    preferences[TI_TIME_REMAINING] = s
+                    val seconds = getDurationFromCycleIndex(preferences, idx)
+                    preferences[TI_TIME_REMAINING] = seconds
                     return@edit
                 }
             }
         }
     }
 
-    suspend fun saveFocusTaskId(context: Context, taskId: Long) {
-        context.dataStore.edit { preferences ->
-            preferences[TI_CURRENT_FOCUSED_TASK_ID] = taskId
-        }
-    }
 }

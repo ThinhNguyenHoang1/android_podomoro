@@ -2,120 +2,102 @@ package com.ahastack.poromodo
 
 import android.app.Application
 import android.content.Intent
-import android.media.AudioAttributes
-import android.media.MediaPlayer
-import android.media.RingtoneManager
-import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.ahastack.poromodo.model.AppDatabase
 import com.ahastack.poromodo.model.PomodoroPhase
 import com.ahastack.poromodo.model.Session
 import com.ahastack.poromodo.model.Task
-import com.ahastack.poromodo.preferences.BREAK_DEFAULT_DURATION_MIN
 import com.ahastack.poromodo.preferences.DataStoreManager
-import com.ahastack.poromodo.preferences.LONG_BREAK_DEFAULT_DURATION_MIN
-import com.ahastack.poromodo.preferences.PODOMORO_DEFAULT_DURATION_MIN
-import com.ahastack.poromodo.preferences.POMODORO_CYCLE
+import com.ahastack.poromodo.preferences.Settings
 import com.ahastack.poromodo.preferences.TERMINAL_FOCUS_TASK_ID
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import com.ahastack.poromodo.preferences.TimerInstance
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
 import java.time.ZonedDateTime
-import androidx.core.net.toUri
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.WhileSubscribed
-import kotlinx.coroutines.flow.stateIn
 
 
 class MainViewModel(application: Application) :
     AndroidViewModel(application) {
-    private val _phase = MutableStateFlow(PomodoroPhase.PODOMORO)
-    val phase: StateFlow<PomodoroPhase> = _phase
+    private val taskDao by lazy { AppDatabase.getDatabase(application).taskDao() }
+    private val sessionDao by lazy { AppDatabase.getDatabase(application).sessionDao() }
 
     private val _expandedStates = MutableStateFlow<Map<Long, Boolean>>(emptyMap())
     val expandedStates: StateFlow<Map<Long, Boolean>> = _expandedStates
 
     private val context = application
 
-    private val _pomodoroDuration =
-        MutableStateFlow(PODOMORO_DEFAULT_DURATION_MIN * 60) // Default in seconds
-    val pomodoroDuration: StateFlow<Int> = _pomodoroDuration
-
-    private val _breakTime = MutableStateFlow(BREAK_DEFAULT_DURATION_MIN * 60) // Default in seconds
-    val breakTime: StateFlow<Int> = _breakTime
-
-    private val _longBreakTime =
-        MutableStateFlow(LONG_BREAK_DEFAULT_DURATION_MIN * 60) // Default in seconds
-    val longBreakTime: StateFlow<Int> = _longBreakTime
-
 
     val timeRemaining: StateFlow<Int> = DataStoreManager.timerState
 
-    val isRunning: StateFlow<Boolean> = DataStoreManager.getIsRunning(application).stateIn(scope = viewModelScope, started = SharingStarted.WhileSubscribed(5000), initialValue = false)
 
-    private val taskDao by lazy { AppDatabase.getDatabase(application).taskDao() }
-    private val sessionDao by lazy { AppDatabase.getDatabase(application).sessionDao() }
+    private val settings: StateFlow<Settings> = DataStoreManager.getSettings(application).stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = Settings()
+    )
+    val timerInstance: StateFlow<TimerInstance> =
+        DataStoreManager.getTimerInstance(application).stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = TimerInstance()
+        )
 
-    val progress = combine(
-        timeRemaining,
-        _pomodoroDuration,
-        _breakTime,
-        _longBreakTime,
-        _phase
-    ) { timeLeft, podoDur, breakDur, longBreakDur, currPhase ->
-        val totalTime = when (currPhase) {
-            PomodoroPhase.PODOMORO -> podoDur
-            PomodoroPhase.BREAK -> breakDur
-            PomodoroPhase.LONG_BREAK -> longBreakDur
-        }
-        (1 - timeLeft.toDouble() / totalTime.toDouble()) * 100
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val focusedTask: StateFlow<Task?> =
+        DataStoreManager.getFocusedTaskId(application).transformLatest<Long, Task> {
+            taskDao.getTaskById(it)
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
+
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val progress = timerInstance.transformLatest<TimerInstance, Int> {
+        (1 - it.timeLeft.toDouble() / it.timeTotal.toDouble()) * 100
     }
 
-    private val _focusedTask: MutableStateFlow<Task?> = MutableStateFlow(null)
-    val focusedTask: StateFlow<Task?> = _focusedTask
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val isRunning: StateFlow<Boolean> = timerInstance.transformLatest<TimerInstance, Boolean> {
+        it.isRunning
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = false
+    )
 
-    private val _taskToIncreasePodoCount =
-        combine(_focusedTask, timeRemaining, _phase) { task, time, phase ->
-            if (time == 0 && task != null && phase == PomodoroPhase.PODOMORO && task.updatedAt.plusSeconds(
-                    59
-                ).isBefore(
-                    ZonedDateTime.now()
-                )
-            ) {
-                task
-            } else null
-        }.filterNotNull()
 
-    private val _podoSetComplete = combine(timeRemaining, _phase) { t, p ->
-        if (t == 0 && p == PomodoroPhase.PODOMORO) {
-            true
+    private val _taskToIncreasePodoCount = combine(focusedTask, timerInstance) { t, ti ->
+        if (ti.timeLeft == 0 && !ti.isRunning && t != null && t.updatedAt.plusSeconds(59)
+                .isBefore(ZonedDateTime.now())
+        ) {
+            t
         } else null
     }.filterNotNull()
 
-    init {
-        // Load initial values from DataStore
-        val context = application.applicationContext
-        viewModelScope.launch {
-            launch {
-                DataStoreManager.getFocusedTaskId(context).collectLatest { tid ->
-                    taskDao.getTaskById(tid).collectLatest { task ->
-                        _focusedTask.emit(task)
-                    }
-                }
-            }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val _podoSetComplete = timerInstance.transformLatest<TimerInstance, Boolean> {
+        it.timeLeft == 0 && it.currentPhase == PomodoroPhase.PODOMORO
+    }
 
+    init {
+        viewModelScope.launch {
             // TASK_COMPLETE
             launch {
                 _taskToIncreasePodoCount.collectLatest {
                     if (it.numOfPodomoroSpend < it.numOfPodomoroToComplete) {
-                        val timeAdded = _pomodoroDuration.value
+                        val timeAdded = settings.value.podomoroDuration
                         val timeSpent = it.totalTimeSpent + timeAdded
                         updateTask(
                             it.copy(
@@ -131,8 +113,8 @@ class MainViewModel(application: Application) :
             // PODO_COMPLETE
             launch {
                 _podoSetComplete.collectLatest {
-                    val timeSpent = _pomodoroDuration.value
-                    val timeBreak = _pomodoroDuration.value
+                    val timeSpent = settings.value.podomoroDuration
+                    val timeBreak = settings.value.breakTime
                     val now = ZonedDateTime.now()
                     val startFrom = now.plusSeconds(-timeSpent.toLong())
                     val s = Session(
@@ -144,16 +126,6 @@ class MainViewModel(application: Application) :
                     sessionDao.upsertSession(s)
                 }
             }
-
-            // A Phase complete
-            launch {
-                timeRemaining.collectLatest {
-                    if (it <= 0) {
-                        DataStoreManager.advanceCycle(application)
-                    }
-                }
-            }
-
         }
     }
 
@@ -187,7 +159,7 @@ class MainViewModel(application: Application) :
         }
     }
 
-    fun unFocusTask(t: Task) {
+    fun unFocusTask() {
         viewModelScope.launch {
             DataStoreManager.saveFocusTaskId(getApplication(), TERMINAL_FOCUS_TASK_ID)
         }
@@ -201,7 +173,7 @@ class MainViewModel(application: Application) :
     }
 
     fun setPhase(phase: PomodoroPhase) {
-        if (_phase.value != phase) {
+        if (timerInstance.value.currentPhase != phase) {
             viewModelScope.launch {
                 DataStoreManager.switchToNextDesiredPhase(getApplication(), phase)
             }
@@ -222,12 +194,6 @@ class MainViewModel(application: Application) :
         viewModelScope.launch {
             DataStoreManager.stopTheClock(getApplication())
         }
-    }
-
-
-    override fun onCleared() {
-        super.onCleared()
-        // Cleanup if needed
     }
 
 }

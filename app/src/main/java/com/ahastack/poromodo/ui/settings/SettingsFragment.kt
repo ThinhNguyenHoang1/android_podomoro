@@ -76,9 +76,9 @@ class SettingsFragment : Fragment() {
             repeatOnLifecycle(state = Lifecycle.State.STARTED) {
                 launch {
                     DataStoreManager.getSettings(requireContext()).collectLatest {
-                        binding.pomodoroDurationInput.setText(it.podomoroDuration)
-                        binding.breakTimeInput.setText(it.breakTime)
-                        binding.breakLongTimeInput.setText(it.longBreakTime)
+                        binding.pomodoroDurationInput.setText(it.podomoroDuration.toString())
+                        binding.breakTimeInput.setText(it.breakTime.toString())
+                        binding.breakLongTimeInput.setText(it.longBreakTime.toString())
 
                         selectedRingtoneUri = it.notiSoundTrack.toUri()
                         val title = getSoundTrackTitleFromUri(selectedRingtoneUri)

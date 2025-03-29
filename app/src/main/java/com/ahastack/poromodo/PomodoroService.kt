@@ -23,6 +23,7 @@ import com.ahastack.poromodo.preferences.POMODORO_CYCLE
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.launch
@@ -82,15 +83,17 @@ class PomodoroService : Service() {
     private fun makeForeground() {
         Log.d("KKKK", "LAUNCHING NOTI")
         scope.launch {
-            val timeLeft = DataStoreManager.timerState.value
-            val timeTotal = DataStoreManager.getCurrentClockMaxTime(this@PomodoroService).last()
-            val notification: Notification =
-                NotificationCompat.Builder(this@PomodoroService, CHANNEL_ID)
-                    .setContentTitle("Pomodoro Timer")
-                    .setContentText("$timeLeft / $timeTotal")
-                    .setSmallIcon(R.drawable.ic_pomo_foreground)
-                    .build()
-            startForeground(NOTIFICATION_ID, notification)
+            DataStoreManager.getTimerInstance(this@PomodoroService).collectLatest { ti ->
+                val timeLeft = ti.timeLeft
+                val timeTotal = ti.timeTotal
+                val notification: Notification =
+                    NotificationCompat.Builder(this@PomodoroService, CHANNEL_ID)
+                        .setContentTitle("Pomodoro Timer")
+                        .setContentText("$timeLeft / $timeTotal")
+                        .setSmallIcon(R.drawable.ic_pomo_foreground)
+                        .build()
+                startForeground(NOTIFICATION_ID, notification)
+            }
         }
     }
 
